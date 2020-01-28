@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from . import controller as c
 
+
 class Application(tk.Tk):
     """Application Root Window"""
     def __init__(self, *args, **kwargs):
@@ -23,7 +24,7 @@ class Application(tk.Tk):
         self.createbatch = c.CreateBatchController(self)
         self.createbatch.createbatch_view.grid(row=1, column=0)
 
-        self.alm_login_controller = c.ALMLoginController(self)
+        # self.alm_login_controller = c.ALMLoginController(self)
 
     def _activate_create_batch(self):
         if self.createbatch is None:

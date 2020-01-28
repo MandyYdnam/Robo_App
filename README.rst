@@ -1,7 +1,43 @@
 Description
 ============
 
-Application to run the Robot Test From the File System.
+Application to run the Robot Test From the File System with following features.
+* Group Robot Test Cases from different Folders and Group them in batch.
+* Search Test using Robot Tags
+* Run/Track the batch execution status in real time.
+* Bookmarks your frequently used test sets to create batch easily.
+* Run Robot Batch in multiple threads to seed up the execution.
+* Designed to suite Mobile and Web test Automation in mind.
+
+
+
+Author
+==========
+Mandeep Dhiman
+
+Installation Requirements
+===========================
+* Python 3
+* Tkinter
+* requests
+
+Configuration
+================
+Usage
+============
+General Notes
+==============
+
+Bugs
+=============
+* Fresh Install- Clicking Bookmarks is clearing the selected project
+* MAC - Context Click is not working
+
+v 0.0.8
+Features
+-----------
+* Added Mac Compatibility
+
 
 v 0.0.7
 Features
@@ -48,23 +84,3 @@ Features
 * Provides user ability to run the Robot Test cases from the project
 * Stores the Past Results from the Execution
 * Provides Batch Monitor to see the Live Batch Execution Process
-
-Author
-==========
-Mandeep Dhiman
-
-Installation Requirements
-===========================
-* Python 3
-* Tkinter
-
-Configuration
-================
-Usage
-============
-General Notes
-==============
-Bugs
-=============
-
-

@@ -3,7 +3,9 @@ from .models import InitializeModel
 from .application import Application
 import os
 
-# Manking User files and directoies
+__version__ = "0.0.8"
+
+# Making User files and directoies
 if not os.path.exists(AppConfig.user_folder_path):
     os.mkdir(AppConfig.user_folder_path)
 
@@ -15,20 +17,22 @@ if not os.path.exists(AppConfig.user_config_file):
     with open(AppConfig.user_config_file, 'a'):
         pass
 
-#Create Tables
+# Create Tables
 initialize_db_model = InitializeModel()
 if not initialize_db_model.is_batch_table():
-    print("initalize batch")
+    print("initialize batch")
     initialize_db_model.cmd_create_batch_table()
 
 if not initialize_db_model.is_script_table():
-    print("initalize scripts")
+    print("initialize scripts")
     initialize_db_model.cmd_create_scripts_table()
 
 if not initialize_db_model.is_command_var_table():
-    print("initalize command")
+    print("initialize command")
     initialize_db_model.cmd_create_command_var_table()
 
+
 def main():
+
     app = application.Application()
     app.mainloop()
