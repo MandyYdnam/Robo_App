@@ -7,15 +7,17 @@ from . import models as m
 from multiprocessing import Pool
 import multiprocessing
 from operator import itemgetter
+from .constants import AppConfig
 
 
 def run_task(task):
+    # print('worker_started:', multiprocessing.current_process().name, multiprocessing.current_process().pid)
     print("In Run task")
-    print(task.get('Batch_ID'))
-    print(task.get('ScriptName'))
-    print(task.get('Source'))
+    print('BatchID:', task.get('Batch_ID'))
+    print('Test Name', task.get('ScriptName'))
+    print('Test Source:', task.get('Source'))
     variable_list = []
-    print(task.get('TestType'))
+    print('Test Type:', task.get('TestType'))
 
     # Change the Execution Dir
     if task.get('Project_Location'):
@@ -36,17 +38,17 @@ def run_task(task):
     variable_list.append('ALMTestLabPath:{}'.format(task.get('ALMTestLabPath')))
     variable_list.append('ALMTestSetName:{}'.format(task.get('ALMTestSetName')))
     variable_list.append('AlmUrl:{}'.format(task.get('AlmUrl')))
-    variable_list.append('almuserid:{}'.format(task.get('almuserid')))
-    variable_list.append('almuserpswd:{}'.format(task.get('almuserpswd')))
-    variable_list.append('almdomain:{}'.format(task.get('almdomain')))
-    variable_list.append('almproject:{}'.format(task.get('almproject')))
+    variable_list.append('almuserid:{}'.format(task.get('almuserid', '')))
+    variable_list.append('almuserpswd:{}'.format(task.get('almuserpswd', '')))
+    variable_list.append('almdomain:{}'.format(task.get('almdomain', '')))
+    variable_list.append('almproject:{}'.format(task.get('almproject', '')))
     print(variable_list)
-    result_folder = task.get('Result_Location', os.path.join(os.environ['USERPROFILE'], "Robot_app"))
+    result_folder = task.get('Result_Location', AppConfig.result_location)
     result_folder = os.path.join(result_folder, str(task.get('Batch_ID')))
-    # print(result_folder)
-    result_folder = result_folder + "\{}\{}".format(datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
+
+    result_folder = os.path.join(result_folder,datetime.now().strftime('%Y-%m-%d_%H-%M-%S'),
                                                     task.get('ScriptName'))
-    # print(result_folder)
+    # print('Result Folder:', result_folder)
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
     with open(os.path.join(result_folder, "console_log.txt"), 'w') as stdout:
@@ -175,6 +177,7 @@ class TestRunnerAgent:
         """Send the Scrpit Updated to the Database"""
         sql_query = "Update tbl_scripts SET {} WHERE batch_id={} AND ScriptName='{}'".format(
             ",".join([str(key) + "=" + str(value) for (key, value) in kwargs.items()]), self._batch_ID, name)
+        # print('Sending Updates')
         # print(sql_query)
         try:
             db_con = m.Robo_Executor_SQLLiteDB()
@@ -189,23 +192,20 @@ class TestRunnerAgent:
         return str(datetime.strptime(date_time, '%Y%m%d %H:%M:%S.%f'))[:-7]
 
 
-class ExectionPool():
+class ExecutionPool:
     def __init__(self, task_list=None, processes=1, variable_list=None, *args, **kwargs):
         # Converting the Task row tuple as Dict
         self.task_list = [task._asdict() for task in task_list]
         self.variable_list = variable_list
         self.process_pool = Pool(processes=processes)
         self.result = []
-        print("Process", processes)
-        # print("Var List", self.variable_list)
-        # print("Test List", self.task_list)
+
 
     # def add_test(self,task_list):
     #
     #     self.task_list.append([ task._asdict() for task in task_list])
 
     def run_command(self):
-        var_list = [self.variable_list] * len(self.task_list)
         self.result = self.process_pool.map_async(run_task, self.task_list)
         # while not (self.result.ready()):
         #     pass

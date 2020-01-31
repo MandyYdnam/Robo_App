@@ -3,6 +3,7 @@ import tkinter as tk
 import os
 from decimal import Decimal, InvalidOperation
 from .constants import FieldTypes as FT
+from sys import platform
 
 
 class ValidateMixin:
@@ -531,6 +532,7 @@ class TabularTreeView(tk.Frame):
             self.tree.delete(child)
         self.entries={"":""}
 
+
 class ContextItemMix:
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -552,12 +554,13 @@ class ContextItemMix:
         self.cMenu.add_command(**kwargs)
 
 
-
-
 class BatchTabularTreeView(ContextItemMix, TabularTreeView):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.tree.bind("<Button-3>", self.do_popup)
+        if platform == 'darwin':
+            self.tree.bind("<Button-2>", self.do_popup)
+        else:
+            self.tree.bind("<Button-3>", self.do_popup)
 
     def do_popup(self, event):
         # display the popup menu
@@ -570,11 +573,13 @@ class BatchTabularTreeView(ContextItemMix, TabularTreeView):
             self.cMenu.grab_release()
 
 
-
 class ScriptTabularTreeView(ContextItemMix, TabularTreeView):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.tree.bind("<Button-3>", self.do_popup)
+        if platform == 'darwin':
+            self.tree.bind("<Button-2>", self.do_popup)
+        else:
+            self.tree.bind("<Button-3>", self.do_popup)
 
     def do_popup(self, event):
         # display the popup menu

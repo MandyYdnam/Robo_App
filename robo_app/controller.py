@@ -11,6 +11,7 @@ from .util import Bookmarks
 from .util import RunTimeData
 from .constants import AppConfig
 import re
+from sys import platform
 import logging
 
 
@@ -243,7 +244,15 @@ class BatchMonitorController():
     def callback_tree_rerun(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
-        self.batch_monitor_model.rerun_batch(row.Batch_ID)
+        # self.batch_monitor_model.rerun_batch(row.Batch_ID)
+
+        if not self.execution_threads.get(row.Batch_ID,None) or self.execution_threads.get(row.Batch_ID,None).remaining_task()== 0:
+            batch_details = self.batch_monitor_model.get_batch_details(row.Batch_ID)[0]
+            # command_variables = self.batch_monitor_model.get_commnad_variables(row.Batch_ID)[0]
+            test_list = self.batch_monitor_model.get_scripts(row.Batch_ID, re_run_scripts=True)
+            self.execution_threads[row.Batch_ID] = r.ExecutionPool(task_list=test_list,  processes=batch_details.ThreadCount)
+
+            self.execution_threads[row.Batch_ID].run_command()
 
     def callback_tree_stop(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
@@ -258,10 +267,10 @@ class BatchMonitorController():
         row = self.batch_monitor_view.inputs['trv_batches'].entries[self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
 
         if not self.execution_threads.get(row.Batch_ID,None) or self.execution_threads.get(row.Batch_ID,None).remaining_task()== 0:
-            batch_details=self.batch_monitor_model.get_batch_details(row.Batch_ID)[0]
+            batch_details = self.batch_monitor_model.get_batch_details(row.Batch_ID)[0]
             # command_variables = self.batch_monitor_model.get_commnad_variables(row.Batch_ID)[0]
-            test_list=self.batch_monitor_model.get_scripts(row.Batch_ID)
-            self.execution_threads[row.Batch_ID] = r.ExectionPool(task_list=test_list,  processes=batch_details.ThreadCount)
+            test_list = self.batch_monitor_model.get_scripts(row.Batch_ID)
+            self.execution_threads[row.Batch_ID] = r.ExecutionPool(task_list=test_list,  processes=batch_details.ThreadCount)
 
             self.execution_threads[row.Batch_ID].run_command()
 
@@ -313,13 +322,16 @@ class BatchExecutionMonitorController():
         else:
             messagebox.showinfo("Batch Execution Monitor", "No Scripts Found")
 
-
     def callback_tree_open(self):
         if self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection != "":
             row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
             if row.Log_path and os.path.exists(row.Log_path):
-                print("Log File Path:",row.Log_path)
-                webbrowser.open(row.Log_path)
+                print("Log File Path:", row.Log_path)
+                if platform == 'darwin':
+                    log_path = "file:///"+row.Log_path
+                else:
+                    log_path = row.Log_path
+                webbrowser.open(log_path)
             else:
                 messagebox.showinfo("Log Not Found", "Log file not found.")
 
@@ -345,7 +357,6 @@ class BatchExecutionMonitorController():
                 self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
             self.batch_exec_monitor_model.stop_script(self.batch_id, row.Script_ID)
             self.refresh_script()
-            # self.refresh_batch_labels()
             self._load_batch_information()
 
 

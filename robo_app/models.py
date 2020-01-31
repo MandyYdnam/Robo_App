@@ -334,10 +334,10 @@ class BatchMonitorModel:
 
         try:
             self.db_con.open_connection()
-            sql_query = "Update tbl_scripts SET Status ='Stopped' WHERE batch_id={} AND Status IN ('No Run','Re Run')".format(batch_id)
+            sql_query = "Update tbl_scripts SET Status ='Stopped' WHERE batch_id={} AND Status IN ('No Run','Re Run','Running')".format(batch_id)
             return self.db_con.run_sql(sql_query, commit=True)
         except Exception as e:
-            print( e)
+            print(e)
         finally:
             self.db_con.close_connection()
 
@@ -355,10 +355,10 @@ class BatchMonitorModel:
     def get_scripts(self,batch_id,re_run_scripts=False):
         try:
             self.db_con.open_connection()
-            if re_run_scripts:
+            if not re_run_scripts:
                 sql_query = "Select tbl_batch.Batch_ID, tbl_batch.Result_Location, tbl_batch.ThreadCount,tbl_batch.TestType,tbl_batch.Project_Location ,tbl_scripts.ScriptName,tbl_scripts.Device_Browser,tbl_scripts.Source,tbl_command_variables.ENV_MC_SERVER,tbl_command_variables.ENV_MC_USER_NAME,tbl_command_variables.ENV_MC_USER_PASS,tbl_command_variables.ENV_URL,tbl_command_variables.ENV_LANGUAGE,tbl_command_variables.ALMTestPlanPath,tbl_command_variables.ALMTestLabPath,tbl_command_variables.ALMTestSetName, tbl_command_variables.AlmUrl, tbl_command_variables.almuserid, tbl_command_variables.almuserpswd,tbl_command_variables.almdomain, tbl_command_variables.almproject from tbl_batch ,tbl_scripts,tbl_command_variables  WHERE tbl_batch.Batch_ID=tbl_scripts.Batch_ID  AND tbl_batch.Batch_ID=tbl_command_variables.Batch_ID AND tbl_batch.Batch_ID={}".format(batch_id)
             else:
-                sql_query = "Select tbl_batch.Batch_ID, tbl_batch.Result_Location, tbl_batch.ThreadCount,tbl_batch.TestType, tbl_batch.Project_Location, tbl_scripts.ScriptName,tbl_scripts.Device_Browser,tbl_scripts.Source,tbl_command_variables.ENV_MC_SERVER,tbl_command_variables.ENV_MC_USER_NAME,tbl_command_variables.ENV_MC_USER_PASS,tbl_command_variables.ENV_URL,tbl_command_variables.ENV_LANGUAGE,tbl_command_variables.ALMTestPlanPath,tbl_command_variables.ALMTestLabPath,tbl_command_variables.ALMTestSetName,tbl_command_variables.AlmUrl,tbl_command_variables.almuserid,tbl_command_variables.almuserpswd,tbl_command_variables.almdomain,tbl_command_variables.almproject from tbl_batch ,tbl_scripts, tbl_command_variables  WHERE tbl_batch.Batch_ID=tbl_scripts.Batch_ID  AND tbl_batch.Batch_ID=tbl_command_variables.Batch_ID  AND tbl_scripts.Status NOT IN ('Passed', 'Failed') AND tbl_batch.Batch_ID={}".format(batch_id)
+                sql_query = "Select tbl_batch.Batch_ID, tbl_batch.Result_Location, tbl_batch.ThreadCount,tbl_batch.TestType, tbl_batch.Project_Location, tbl_scripts.ScriptName,tbl_scripts.Device_Browser,tbl_scripts.Source,tbl_command_variables.ENV_MC_SERVER,tbl_command_variables.ENV_MC_USER_NAME,tbl_command_variables.ENV_MC_USER_PASS,tbl_command_variables.ENV_URL,tbl_command_variables.ENV_LANGUAGE,tbl_command_variables.ALMTestPlanPath,tbl_command_variables.ALMTestLabPath,tbl_command_variables.ALMTestSetName,tbl_command_variables.AlmUrl,tbl_command_variables.almuserid,tbl_command_variables.almuserpswd,tbl_command_variables.almdomain,tbl_command_variables.almproject from tbl_batch ,tbl_scripts, tbl_command_variables  WHERE tbl_batch.Batch_ID=tbl_scripts.Batch_ID  AND tbl_batch.Batch_ID=tbl_command_variables.Batch_ID  AND tbl_scripts.Status NOT IN ('Passed', 'Failed','Stopped') AND tbl_batch.Batch_ID={}".format(batch_id)
 
             return self.db_con.run_sql(sql_query)
         except Exception as e:
@@ -434,7 +434,7 @@ class BatchExecutionMonitorModel:
         """Stops the Script based on ID"""
         try:
             self.db_con.open_connection()
-            sql_query = "Update tbl_scripts SET Status ='Stopped' WHERE batch_id={} AND Script_ID={} AND Status IN ('No Run','Re Run')".format(batch_id,script_id)
+            sql_query = "Update tbl_scripts SET Status ='Stopped' WHERE batch_id={} AND Script_ID={} AND Status IN ('No Run','Re Run','Running')".format(batch_id,script_id)
 
             return self.db_con.run_sql(sql_query, commit=True)
         except Exception as e:
