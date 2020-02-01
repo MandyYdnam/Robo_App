@@ -8,6 +8,8 @@ Application to run the Robot Test From the File System with following features.
 * Bookmarks your frequently used test sets to create batch easily.
 * Run Robot Batch in multiple threads to seed up the execution.
 * Designed to suite Mobile and Web test Automation in mind.
+* This application is written in Python 3.7. Not tested for Python 3.8
+* Can be integrated with Microfocus ALM Authentication.
 
 
 
@@ -18,20 +20,82 @@ Mandeep Dhiman
 Installation Requirements
 ===========================
 * Python 3
+* Robot Framework
 * Tkinter
 * requests
 
+Installation
+------------
+
+Using ``pip``
+'''''''''''''
+The recommended installation method is using
+`pip <http://pip-installer.org>`__::
+    pip install robot-executor
+
+
 Configuration
 ================
+
 Usage
 ============
-General Notes
+
+* Browse to base Robot Framework Project Location Folder.
+* Search the Test Cases by Browsing to different Folder.
+* You can also Search Test by Tags.
+* From the Search Results Add the Test cases to the Batch.
+* Click on Create Batch.
+* Fill in the Required Batch Details Create a Batch
+* Once Batch is Created, Go to Batch Monitor.
+* Right Click the batch and Click Start to Start the Test Execution.
+
+
+ALM Authentication Version
+=========================
+
+Note:
+
+Information Provided on Create batch form is exposed as Command line variables to robot Test. So values in these
+fields can be used in the Robot Test as Variables.
+Read `Setting variables in command line <https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#setting-variables-in-command-line>`_
+
+Here is the Mapping of fields to variable names.
+
+* Language => ENV_LANGUAGE
+* Test Plan Path => ALMTestPlanPath
+* Test Lab Path => ALMTestLabPath
+* Test Set Name => ALMTestSetName
+
+Mobile Specific Mapping:
+* Select Device / Browser => ENV_DEVICE_UDID
+* Select Server=> ENV_MC_SERVER
+* User Name => ENV_MC_USER_NAME
+* User Password => ENV_MC_USER_PASS
+
+Browser Specific Mapping:
+* Select Device / Browser => ENV_Browser
+* Select URL => ENV_URL
+
+
+If you are using Microfocus's ALM Login Form then following variable will be exposed:
+
+* AlmUrl
+* Name => almuserid
+* Password => almuserpswd
+* Domain => almdomain
+* Project => almproject
+
+
+Project Contributors
 ==============
 
-Bugs
+* `Mandeep Dhiman <https://github.com/MandyYdnam/>`_
+
+
+Know Bugs
 =============
 * Fresh Install- Clicking Bookmarks is clearing the selected project
-* MAC - Context Click is not working
+
 
 v 0.0.8
 Features

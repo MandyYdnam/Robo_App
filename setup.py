@@ -12,7 +12,7 @@ setup(
     description="A GUI based Robot Test Executor",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/MandyYdnam/Robo_App",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

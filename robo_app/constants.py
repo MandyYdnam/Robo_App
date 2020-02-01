@@ -23,11 +23,12 @@ class AppConfig:
     SERVER_LIST = ["Server1",
                    "Server2",
                    "Server3"]
-    ALM_URI = "enter your alm url"
     BROWSER_LIST = ['Chrome', 'Safari', 'Firefox', 'IE']
     URL_LIST = ['URL1',
                 'URL2']
     DEVICE_LIST = ['DUMMY DEVICE1', 'DUMMY DEVICE2']
+    USE_ALM = False
+    ALM_URI = "enter your alm uri"
 
 
 class DatabaseConfig:

@@ -449,6 +449,7 @@ class FolderTreeView(tk.Frame):
     def get(self):
         return self.get_selected_item_path()
 
+
 class TabularTreeView(tk.Frame):
     def __init__(self, parent, columnNames=None, showCols='headings', selection_mode='extended', **kwargs):
         super().__init__(parent, **kwargs)
@@ -473,15 +474,15 @@ class TabularTreeView(tk.Frame):
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
         self.tree.bind("<Button-1>", self.on_click)
-        self.tree.bind("<Double-1>", self.on_double_click)
+        # self.tree.bind("<Double-1>", self.on_double_click)
 
     def on_click(self, event):
         region = self.tree.identify("region", event.x, event.y)
         if region == "heading":
             self.sort(self.tree, self.columnNames[int(self.tree.identify('column', event.x, event.y).strip('#')) - 1])
 
-    def on_double_click(self, event):
-        pass
+    # def on_double_click(self, event):
+    #     pass
 
     def sort(self, tv, col):
         itemlist = list(tv.get_children(''))
@@ -494,7 +495,7 @@ class TabularTreeView(tk.Frame):
                    if id != '']
 
     def get_selected_items(self):
-        selected_item = [ self.entries[id]  for id in self.tree.selection()]
+        selected_item = [ self.entries[id] for id in self.tree.selection()]
         return selected_item
 
     def get(self):
