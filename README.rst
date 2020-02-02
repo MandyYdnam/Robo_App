@@ -108,7 +108,7 @@ Project Contributors
 Know Bugs
 =============
 
-* Fresh Install- Clicking Bookmarks is clearing the selected project
+* Sorting in Scripts Table
 
 
 v 0.0.8

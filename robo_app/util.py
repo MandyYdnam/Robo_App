@@ -28,8 +28,8 @@ class AppConfigParser(ConfigParser):
         if not self.has_section(config_section):
             # add Section
             self.add_section(config_section)
-        else:
-            self[config_section][config_key] = config_value
+        # else:
+        self[config_section][config_key] = config_value
         self.writefile()
 
     def __readfile(self, encoding=None):
