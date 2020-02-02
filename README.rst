@@ -29,7 +29,8 @@ Installation
 Using ``pip``
 '''''''''''''
 The recommended installation method is using
-`pip <http://pip-installer.org>`__::
+`pip <http://pip-installer.org>`_
+
     pip install robot-executor
 
 To run the tool Run following in Terminal/Command
@@ -41,8 +42,9 @@ ALM Authentication Configuration
 This Application comes with ALM Authentication. By Default this is feature is disabled.
 To enable this feature, Download the source from the `Git Hub <https://github.com/MandyYdnam/Robo_App>`_
 Update Following in constants.py
-    * USE_ALM = True
-    * ALM_URI = "enter your alm uri"
+
+* USE_ALM = True
+* ALM_URI = "enter your alm uri"
 
 And Build the distribution from source.
 Once done, Install the newly build package.
@@ -100,7 +102,7 @@ If you are using Microfocus's ALM Login Form then following variable will be exp
 
 
 Project Contributors
-==============
+======================
 
 * `Mandeep Dhiman <https://github.com/MandyYdnam>`_
 
