@@ -45,7 +45,7 @@ Update Following in constants.py
     * ALM_URI = "enter your alm uri"
 
 And Build the distribution from source.
-Once done, Install the newly build package and Try to run.
+Once done, Install the newly build package.
 
 
 Usage
@@ -75,13 +75,17 @@ Here is the Mapping of fields to variable names.
 * Test Lab Path => ALMTestLabPath
 * Test Set Name => ALMTestSetName
 
+
 Mobile Specific Mapping:
+
 * Select Device / Browser => ENV_DEVICE_UDID
 * Select Server=> ENV_MC_SERVER
 * User Name => ENV_MC_USER_NAME
 * User Password => ENV_MC_USER_PASS
 
+
 Browser Specific Mapping:
+
 * Select Device / Browser => ENV_Browser
 * Select URL => ENV_URL
 
@@ -98,62 +102,72 @@ If you are using Microfocus's ALM Login Form then following variable will be exp
 Project Contributors
 ==============
 
-* `Mandeep Dhiman <https://github.com/MandyYdnam/>`_
+* `Mandeep Dhiman <https://github.com/MandyYdnam>`_
 
 
 Know Bugs
 =============
+
 * Fresh Install- Clicking Bookmarks is clearing the selected project
 
 
 v 0.0.8
-Features
 -----------
+Features
+
 * Added Mac Compatibility
 
 
 v 0.0.7
-Features
 -----------
+Features
+
 * Sorting For Batch Execution Monitor
 * Add License
 
 v 0.0.6
-Features
 -----------
+Features
+
 * URL Parameter for Web
 * Search by Tags
 
 v 0.0.5
-Features
 -----------
+Features
+
 * ALM Login Screen And Integration
 
 
 v 0.0.4
-Features
 -----------
+Features
+
 * Enhanced Book Mark Feature
 
 
 v 0.0.3
+--------
 Features
------------
+
 * Add Feature To Create Bookmaks for Test Case
 * Back End changes from Tuple to Dict
 * Load bookmarks to update after creating new BM.
 * Enhancements to Database Model Function
 
+
 v 0.0.2
-Features
 -----------
+Features
+
 * Add Feature To Update Already Existing Batch
 * Add Feature to Update Script.
 
 
 v 0.0.1
-Features
 -----------
+Features
+
 * Provides user ability to run the Robot Test cases from the project
 * Stores the Past Results from the Execution
 * Provides Batch Monitor to see the Live Batch Execution Process
