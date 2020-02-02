@@ -1,6 +1,8 @@
 from .constants import AppConfig
 from .models import InitializeModel
 from .application import Application
+import multiprocessing
+from sys import platform
 import os
 
 __version__ = "0.0.8"
@@ -33,6 +35,7 @@ if not initialize_db_model.is_command_var_table():
 
 
 def main():
-
+    if platform == 'darwin':
+        multiprocessing.set_start_method("spawn")
     app = application.Application()
     app.mainloop()
