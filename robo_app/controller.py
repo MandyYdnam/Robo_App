@@ -12,7 +12,6 @@ from .util import RunTimeData
 from .constants import AppConfig
 import re
 from sys import platform
-import logging
 
 
 class CreateBatchController():
@@ -103,19 +102,21 @@ class CreateBatchController():
             self.createbatch_view.load_device_list(self.get_device_list())
         else:
             messagebox.showinfo("Create Batch Error",
-                                "Are you sure you want to create empty batch. I don't think so. Please add some scripts.",
+                                "Are you sure you want to create empty batch. I don't think so. Please add some "
+                                "scripts.",
                                 parent=self.createbatch_view)
 
     def callback_create_bookmark(self):
         test_list = self.createbatch_view.get_batch_tests()
         proj_loc = os.path.realpath(self._get_project_location())
         for test in test_list:
-            test['source'] = test['source'].replace(proj_loc, '').strip('\\')
+            test['source'] = test['source'].replace(proj_loc, '').strip(os.path.sep)
         if len(test_list) > 0:
             self.createbookmark_controller = CreateBookMarkController(self.createbatch_view, test_list)
         else:
             messagebox.showinfo("Create Batch Error",
-                                "Are you sure you want to create empty bookmark. I don't think so. Please add some scripts.",
+                                "Are you sure you want to create empty bookmark. I don't think so. Please add some "
+                                "scripts.",
                                 parent=self.createbatch_view)
 
     def cmd_insert_batch_details(self):
@@ -398,7 +399,7 @@ class BatchExecutionMonitorController:
             self._load_batch_information()
 
 
-class BatchUpdateController():
+class BatchUpdateController:
     """The input form for the Batch Execution Monitor Widgets"""
 
     def __init__(self, parent, batch_id, callbacks=None, *args, **kwargs):

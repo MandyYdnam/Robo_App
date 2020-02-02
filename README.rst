@@ -1,7 +1,6 @@
 Description
 ============
-
-Application to run the Robot Test From the File System with following features.
+* Application to run the Robot Test From the File System with following features.
 * Group Robot Test Cases from different Folders and Group them in batch.
 * Search Test using Robot Tags
 * Run/Track the batch execution status in real time.
@@ -33,9 +32,21 @@ The recommended installation method is using
 `pip <http://pip-installer.org>`__::
     pip install robot-executor
 
+To run the tool Run following in Terminal/Command
+    roboapp
 
 Configuration
 ================
+ALM Authentication Configuration
+This Application comes with ALM Authentication. By Default this is feature is disabled.
+To enable this feature, Download the source from the `Git Hub <https://github.com/MandyYdnam/Robo_App>`_
+Update Following in constants.py
+    * USE_ALM = True
+    * ALM_URI = "enter your alm uri"
+
+And Build the distribution from source.
+Once done, Install the newly build package and Try to run.
+
 
 Usage
 ============
@@ -48,10 +59,8 @@ Usage
 * Fill in the Required Batch Details Create a Batch
 * Once Batch is Created, Go to Batch Monitor.
 * Right Click the batch and Click Start to Start the Test Execution.
-
-
-ALM Authentication Version
-=========================
+* Application do not allow to overwrite existing bookmark.
+* If you really want to updated exiting bookmark, then use admin password (Pr1y@)
 
 Note:
 

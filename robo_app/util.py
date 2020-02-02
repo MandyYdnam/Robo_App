@@ -26,7 +26,7 @@ class AppConfigParser(ConfigParser):
     def add_configuration(self, config_section, config_key, config_value ):
         self.__readfile()
         if not self.has_section(config_section):
-            #add Section
+            # add Section
             self.add_section(config_section)
         else:
             self[config_section][config_key] = config_value
@@ -34,6 +34,7 @@ class AppConfigParser(ConfigParser):
 
     def __readfile(self, encoding=None):
         return self.read(filenames=self.file_name, encoding=encoding)
+
 
 class Bookmarks:
     def __init__(self, file):
