@@ -21,7 +21,7 @@ class CreateBatchController():
 
         self.bookmark_dd = {}
         # self.load_bookmarks_data()
-        callbacks = {'btn_createBatch': self.callback_create_batch,
+        callbacks = {'btn_createBatch': self.callback_create_batch2,
                      'btn_createBatch_Bookmark': self.cmd_insert_batch_details,
                      'SearchBtn': self.callback_search_script,
                      'AddSelected': self.callback_add_selected,
@@ -96,10 +96,25 @@ class CreateBatchController():
         else:
             return AppConfig.user_folder_path
 
-    def callback_create_batch(self):
+    # def callback_create_batch(self):
+    #     if len(self.createbatch_view.get_batch_tests()) > 0:
+    #         self.createbatch_view.batch_details()
+    #         self.createbatch_view.load_device_list(self.get_device_list())
+    #     else:
+    #         messagebox.showinfo("Create Batch Error",
+    #                             "Are you sure you want to create empty batch. I don't think so. Please add some "
+    #                             "scripts.",
+    #                             parent=self.createbatch_view)
+
+    def callback_create_batch2(self):
         if len(self.createbatch_view.get_batch_tests()) > 0:
-            self.createbatch_view.batch_details()
-            self.createbatch_view.load_device_list(self.get_device_list())
+
+            widget_data = self.createbatch_view.get()
+            batch_data = {'test_list': self.createbatch_view.get_batch_tests(),
+                          'result_location' : widget_data['tbx_resultLocation'],
+                          'project_location' : widget_data['txb_ProjectLocation']}
+
+            CreateBatchDetailsController(self.createbatch_view, batch_data=batch_data)
         else:
             messagebox.showinfo("Create Batch Error",
                                 "Are you sure you want to create empty batch. I don't think so. Please add some "
@@ -189,6 +204,8 @@ class CreateBatchController():
             messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
                                  parent=self.createbatch_view)
 
+
+
     def get_device_list(self):
         patrn = "[\dA-Za-z-]+"
         file_loc = os.path.join(self.createbatch_view.inputs['txb_ProjectLocation'].variable.get(),
@@ -200,6 +217,108 @@ class CreateBatchController():
                 device_list = [re.findall(patrn, line[line.find("==") + 2:].strip())[0] for line in device_file
                                if 'arg1' in line and '==' in line]
         return device_list
+
+
+class CreateBatchDetailsController:
+    """The input form for the Create Batch Details"""
+
+    def __init__(self, parent, batch_data, *args, **kwargs):
+        self.batch_data = batch_data if batch_data else {}
+        callbacks = {'btn_createBatch_Bookmark': self.callback_create_batch
+                     }
+
+        self.create_batch_details_view = v.CreateBatchDetailsForm(parent, callbacks, *args, **kwargs)
+        self.create_batch_details_view.load_device_list(self.get_device_list())
+
+        self.create_batch_details_model = m.CreateBatchDetailsModel()
+
+    def get_device_list(self):
+        patrn = "[\dA-Za-z-]+"
+        file_loc = os.path.join(self.batch_data.get('project_location'),
+                                r'Resources/ConfigFiles/DeviceCapList.py')
+        if not os.path.exists(file_loc):
+            device_list = AppConfig.DEVICE_LIST
+        else:
+            with open(file_loc, 'r') as device_file:
+                device_list = [re.findall(patrn, line[line.find("==") + 2:].strip())[0] for line in device_file
+                               if 'arg1' in line and '==' in line]
+        return device_list
+    # def load_gui(self):
+    #     # Load Create Batch Details in UI
+    #     self.populate_batch_data()
+    #     self.batch_monitor_view.grid(row=1, column=0)
+
+    def callback_create_batch(self):
+
+        error_list = self.create_batch_details_view.get_errors()
+
+        # Removing the Rquired Error If its not Mobile App
+        if self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() != 'Mobile':
+            error_list.pop('txb_mc_user_name', '')
+            error_list.pop('txb_mc_user_pass', '')
+        else:
+            error_list.pop('lstbx_url_center', '')
+
+        if len(error_list) == 0:
+            """Controls Batch Creation"""
+            batch_name = self.create_batch_details_view.inputs['txb_batchName'].variable.get()
+            test_type = self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get()
+            browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace("\n",
+                                                                                                             ';') if \
+                self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
+                self.create_batch_details_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
+            thread_count = self.create_batch_details_view.inputs['txb_batchNumberOfThreads'].variable.get()
+            result_location = self.batch_data.get('result_location')
+            project_location = self.batch_data.get('project_location')
+
+            batch_id = self.create_batch_details_model.cmd_insert_batch_details(batch_name, test_type, browser_device_list,
+                                                                 thread_count, result_location, project_location)
+            if batch_id:
+                browser_device_list = itertools.cycle(browser_device_list.split(";"))
+                test_list = self.batch_data.get('test_list', [])
+
+                self.create_batch_details_model.cmd_insert_scripts_in_batch2(batch_id, browser_device_list, test_list)
+                # Adding ALM and Mobile Center Components
+                alm_test_plan = self.create_batch_details_view.inputs['txb_alm_plan_path'].variable.get()
+                alm_test_lab = self.create_batch_details_view.inputs['txb_alm_lab_path'].variable.get()
+                alm_test_set = self.create_batch_details_view.inputs['txb_alm_test_set_name'].variable.get()
+                test_language = self.create_batch_details_view.inputs['rb_application_lang_EN'].variable.get()
+                env_url = self.create_batch_details_view.inputs['lstbx_url_center'].variable.get()
+                if self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile':
+                    mc_server_url = self.create_batch_details_view.inputs['lstbx_mobile_center'].get()
+                    mc_server_user = self.create_batch_details_view.inputs['txb_mc_user_name'].variable.get()
+                    mc_server_pass = self.create_batch_details_view.inputs['txb_mc_user_pass'].variable.get()
+                    self.create_batch_details_model.cmd_insert_command_variable(batch_id, alm_test_plan_path=alm_test_plan,
+                                                                 alm_test_lab_path=alm_test_lab,
+                                                                 alm_test_set_name=alm_test_set,
+                                                                 test_lang=test_language,
+                                                                 mc_server_url=mc_server_url,
+                                                                 mc_server_user_name=mc_server_user,
+                                                                 mc_server_user_pass=mc_server_pass,
+                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
+                                                                 alm_user=RunTimeData().getdata('alm_user'),
+                                                                 alm_pass=RunTimeData().getdata('alm_password'),
+                                                                 alm_domain=RunTimeData().getdata('alm_domain'),
+                                                                 alm_proj=RunTimeData().getdata('alm_project'))
+                else:
+                    self.create_batch_details_model.cmd_insert_command_variable(batch_id, alm_test_plan_path=alm_test_plan,
+                                                                 alm_test_lab_path=alm_test_lab,
+                                                                 alm_test_set_name=alm_test_set,
+                                                                 test_lang=test_language,
+                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
+                                                                 alm_user=RunTimeData().getdata('alm_user'),
+                                                                 alm_pass=RunTimeData().getdata('alm_password'),
+                                                                 alm_domain=RunTimeData().getdata('alm_domain'),
+                                                                 alm_proj=RunTimeData().getdata('alm_project'),
+                                                                 env_url=env_url)
+                messagebox.showinfo('Batch Create', "Batch has been created with Batch ID:{}".format(batch_id),
+                                    parent=self.create_batch_details_view)
+            else:
+                messagebox.showerror('Error', 'Unable to Create Batch')
+            self.create_batch_details_view.inputs['win_batchdetails'].destroy()
+        else:
+            messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
+                                 parent=self.create_batch_details_view)
 
 
 class BatchMonitorController:
@@ -214,11 +333,13 @@ class BatchMonitorController:
                      'Rerun': self.callback_tree_rerun,
                      'Update Details': self.callback_tree_update,
                      'btn_refresh': self.populate_batch_data,
-                     'on_double_click': self.callback_tree_on_double_click}
+                     'on_double_click': self.callback_tree_on_double_click,
+                     'Clone Batch':self.callback_clone_batch}
 
         self.batch_monitor_view = v.BatchMonitor(parent, callbacks, *args, **kwargs)
 
         self.batch_monitor_model = m.BatchMonitorModel()
+        self.batch_execution_monitor_controller = None
         self.load_gui()
 
         self.execution_threads = {}
@@ -273,6 +394,9 @@ class BatchMonitorController:
                                                                    processes=batch_details.ThreadCount)
 
             self.execution_threads[row.Batch_ID].run_command()
+        else:
+            messagebox.showwarning("Batch Execution Monitor", "Batch is already running. Please try later after "
+                                                              "stopping the batch")
 
     def callback_tree_stop(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -296,6 +420,17 @@ class BatchMonitorController:
                                                                    processes=batch_details.ThreadCount)
 
             self.execution_threads[row.Batch_ID].run_command()
+
+    def callback_clone_batch(self):
+        row = self.batch_monitor_view.inputs['trv_batches'].entries[
+            self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
+        data_rows= self.batch_monitor_model.get_clone_data(row.Batch_ID)
+        test_list = [{'name': row.name, 'doc': row.doc, 'tags': row.tags, 'source': row.source} for row in data_rows]
+
+        batch_data = {'test_list': test_list,
+                      'result_location': data_rows[0].result_Location,
+                      'project_location': data_rows[0].project_Location}
+        CreateBatchDetailsController(self.batch_monitor_view, batch_data=batch_data)
 
 
 class BatchExecutionMonitorController:

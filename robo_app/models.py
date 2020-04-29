@@ -78,6 +78,7 @@ class Robo_Executor_SQLLiteDB():
             self.connection.commit()
         return self.curs.rowcount
 
+
 class InitializeModel:
     fields = {
         "Name": {'req':True, 'type': FT.string},
@@ -193,6 +194,7 @@ class InitializeModel:
         finally:
             self.db_con.close_connection()
 
+
 class BatchModel:
     fields = {
         "Name": {'req':True, 'type': FT.string},
@@ -305,6 +307,95 @@ class BatchModel:
             self.db_con.close_connection()
 
 
+class CreateBatchDetailsModel:
+    fields = {
+        "Name": {'req':True, 'type': FT.string},
+        "DeviceList":{'req':False, 'type':FT.string_list, 'values':[]},
+        "BrowserList":{'req':False, 'type':FT.string_list, 'values':['Chrome','Internet Explorer', 'FireFox']},
+        "TestType" : {'req':True, 'type':FT.string},
+        "BatchCreationDate":{'req': True, 'type': FT.dateTime},
+        "ThreadsCount" : {'req':True, 'type' : FT.integer, 'min': 0, 'max': 4},
+        "Batch_ID": {'req': True, 'type': FT.integer}
+    }
+
+    def __init__(self):
+        self.db_con = Robo_Executor_SQLLiteDB()
+
+    def cmd_insert_batch_details(self, batch_name, test_type, browser_device_list, thread_count, result_location,
+                                 project_location):
+
+        try:
+            self.db_con.open_connection()
+            batchID = self.db_con.insert_batch(
+                {'Batch_Name': "{}".format(batch_name),
+                 'TestType': "{}".format(test_type),
+                 'Browsers_OR_Devices': "{}".format(browser_device_list),
+                 'Result_Location': "{}".format(result_location),
+                 'Project_Location': "{}".format(project_location),
+                 'ThreadCount': "{}".format(thread_count)})
+            return batchID
+
+        except Exception as e:
+            print(e)
+        finally:
+            self.db_con.close_connection()
+
+    def cmd_insert_scripts_in_batch2(self, batch_id, browser_device_list, test_list):
+        """Insert Scripts in the Batch"""
+        """Takes Test as List"""
+
+        try:
+            self.db_con.open_connection()
+            device_browser_generator = itertools.cycle(browser_device_list)
+            for test in test_list:
+                # print(test)
+                self.db_con.insert_script({'ScriptName': "{}".format(test['name']),
+                                      'Documentation': "{}".format((test['doc'])),
+                                      'Source': "{}".format(test['source']),
+                                      'Tag': "{}".format(test['tags']),
+                                      'Status': "No Run",
+                                      'Device_Browser': "{}".format(next(device_browser_generator)),
+                                      'Run_Count': "0",
+                                      'Batch_ID': str(batch_id)})
+
+            return True
+        except Exception as e:
+            logging.error('Exception occured', exc_info=True)
+            print(e)
+        finally:
+            self.db_con.close_connection()
+
+    def cmd_insert_command_variable(self, batch_id, alm_test_plan_path, alm_test_lab_path, alm_test_set_name,
+                                    test_lang, alm_url, alm_user, alm_pass, alm_domain, alm_proj,
+                                    mc_server_url='', mc_server_user_name='', mc_server_user_pass='', env_url=''):
+        """Command line Variable for Batch"""
+
+        try:
+            self.db_con.open_connection()
+
+            self.db_con.insert_To_db("tbl_command_variables",{'ALMTestPlanPath': "{}".format(alm_test_plan_path),
+                                                              'ALMTestLabPath': "{}".format(alm_test_lab_path),
+                                                              'ALMTestSetName': "{}".format(alm_test_set_name),
+                                                              'ENV_MC_SERVER': "{}".format(mc_server_url),
+                                                              'ENV_MC_USER_NAME': "{}".format(mc_server_user_name),
+                                                              'ENV_MC_USER_PASS': "{}".format(mc_server_user_pass),
+                                                              'ENV_URL':'{}'.format(env_url),
+                                                              'ENV_LANGUAGE':"{}".format(test_lang),
+                                                              'AlmUrl':"{}".format(alm_url),
+                                                              'almuserid':"{}".format(alm_user),
+                                                              'almuserpswd':"{}".format(alm_pass),
+                                                              'almdomain':"{}".format(alm_domain),
+                                                              'almproject':"{}".format(alm_proj),
+                                                              'Batch_ID': str(batch_id)})
+
+            return True
+        except Exception as e:
+            print(e)
+            return False
+        finally:
+            self.db_con.close_connection()
+
+
 class BatchMonitorModel:
     fields = {
         "Name": {'req':True, 'type': FT.string},
@@ -355,7 +446,7 @@ class BatchMonitorModel:
     def get_scripts(self,batch_id,re_run_scripts=False):
         try:
             self.db_con.open_connection()
-            if not re_run_scripts:
+            if re_run_scripts:
                 sql_query = "Select tbl_batch.Batch_ID, tbl_batch.Result_Location, tbl_batch.ThreadCount,tbl_batch.TestType,tbl_batch.Project_Location ,tbl_scripts.ScriptName,tbl_scripts.Device_Browser,tbl_scripts.Source,tbl_command_variables.ENV_MC_SERVER,tbl_command_variables.ENV_MC_USER_NAME,tbl_command_variables.ENV_MC_USER_PASS,tbl_command_variables.ENV_URL,tbl_command_variables.ENV_LANGUAGE,tbl_command_variables.ALMTestPlanPath,tbl_command_variables.ALMTestLabPath,tbl_command_variables.ALMTestSetName, tbl_command_variables.AlmUrl, tbl_command_variables.almuserid, tbl_command_variables.almuserpswd,tbl_command_variables.almdomain, tbl_command_variables.almproject from tbl_batch ,tbl_scripts,tbl_command_variables  WHERE tbl_batch.Batch_ID=tbl_scripts.Batch_ID  AND tbl_batch.Batch_ID=tbl_command_variables.Batch_ID AND tbl_batch.Batch_ID={}".format(batch_id)
             else:
                 sql_query = "Select tbl_batch.Batch_ID, tbl_batch.Result_Location, tbl_batch.ThreadCount,tbl_batch.TestType, tbl_batch.Project_Location, tbl_scripts.ScriptName,tbl_scripts.Device_Browser,tbl_scripts.Source,tbl_command_variables.ENV_MC_SERVER,tbl_command_variables.ENV_MC_USER_NAME,tbl_command_variables.ENV_MC_USER_PASS,tbl_command_variables.ENV_URL,tbl_command_variables.ENV_LANGUAGE,tbl_command_variables.ALMTestPlanPath,tbl_command_variables.ALMTestLabPath,tbl_command_variables.ALMTestSetName,tbl_command_variables.AlmUrl,tbl_command_variables.almuserid,tbl_command_variables.almuserpswd,tbl_command_variables.almdomain,tbl_command_variables.almproject from tbl_batch ,tbl_scripts, tbl_command_variables  WHERE tbl_batch.Batch_ID=tbl_scripts.Batch_ID  AND tbl_batch.Batch_ID=tbl_command_variables.Batch_ID  AND tbl_scripts.Status NOT IN ('Passed', 'Failed','Stopped') AND tbl_batch.Batch_ID={}".format(batch_id)
@@ -363,6 +454,18 @@ class BatchMonitorModel:
             return self.db_con.run_sql(sql_query)
         except Exception as e:
             print( e)
+        finally:
+            self.db_con.close_connection()
+
+    def get_clone_data(self, batch_id):
+        try:
+            self.db_con.open_connection()
+
+            sql_query = "SELECT ScriptName as 'name', Documentation as 'doc', Tag as 'tags', Source as 'source', tbl_batch.Result_Location as 'result_Location', tbl_batch.Project_Location as 'project_Location'  FROM tbl_scripts, tbl_batch WHERE  tbl_batch.Batch_ID=tbl_scripts.Batch_ID AND tbl_scripts.Batch_ID=={}".format(
+                batch_id)
+            return self.db_con.run_sql(sql_query)
+        except Exception as e:
+            print(e)
         finally:
             self.db_con.close_connection()
 
@@ -530,7 +633,6 @@ class BatchUpdateModel:
             print( e)
         finally:
             self.db_con.close_connection()
-
 
 
 class ScriptUpdateModel:

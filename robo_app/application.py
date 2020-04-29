@@ -20,7 +20,7 @@ class Application(tk.Tk):
         self.btn_create_batch.grid(row=0, column=0)
         self.btn_batch_monitor = tk.Button(frm_options, text="Batch Monitor", command=self._activate_batch_monitor,relief=tk.RAISED)
         self.btn_batch_monitor.grid(row=0, column=1)
-        ttk.Label(self, text="Developed By: Mandeep Dhiman",font=("TkDefaultFont", 8,'bold')).grid(row=2, column=0, sticky=tk.E)
+        # ttk.Label(self, text="Developed By: Mandeep Dhiman",font=("TkDefaultFont", 8,'bold')).grid(row=2, column=0, sticky=tk.E)
 
         self.create_batch = c.CreateBatchController(self)
         self.create_batch.createbatch_view.grid(row=1, column=0)

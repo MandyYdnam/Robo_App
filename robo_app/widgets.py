@@ -8,6 +8,7 @@ from sys import platform
 
 class ValidateMixin:
     """Add a validation functionality to a widget"""
+
     def __init__(self, *args, error_var=None, **kwargs):
         self.error = error_var or tk.StringVar()
         super().__init__(*args, **kwargs)
@@ -16,8 +17,8 @@ class ValidateMixin:
 
         self.config(
             validate='all',
-            validatecommand=(vcmd,'%P', '%s', '%S', '%V', '%i', '%d'),
-            invalidcommand = (invcmd, '%P', '%s', '%S', '%V', '%i', '%d')
+            validatecommand=(vcmd, '%P', '%s', '%S', '%V', '%i', '%d'),
+            invalidcommand=(invcmd, '%P', '%s', '%S', '%V', '%i', '%d')
         )
 
     def _toggle_error(self, on=False):
@@ -28,7 +29,7 @@ class ValidateMixin:
         self.error.set('')
         valid = True
         if event == 'focusout':
-            valid= self._focusout_validation(event=event)
+            valid = self._focusout_validation(event=event)
         elif event == 'key':
             valid = self._key_validation(proposed=proposed, current=current, char=char, index=index, action=action)
         return valid
@@ -36,7 +37,7 @@ class ValidateMixin:
     def _focusout_validation(self, **kwargs):
         return True
 
-    def _key_validation(self,**kwargs):
+    def _key_validation(self, **kwargs):
         return True
 
     def _invalid(self, proposed, current, char, event, index, action):
@@ -52,13 +53,13 @@ class ValidateMixin:
         return True
 
     def trigger_focusout_validation(self):
-        valid = self._validate('','','','focusout','','')
+        valid = self._validate('', '', '', 'focusout', '', '')
         if not valid:
             self._focusout_invalid(event='focusout')
         return valid
 
 
-class ValidEntry(ValidateMixin,ttk.Entry):
+class ValidEntry(ValidateMixin, ttk.Entry):
 
     def _focusout_validation(self, **kwargs):
         valid = True
@@ -67,7 +68,8 @@ class ValidEntry(ValidateMixin,ttk.Entry):
             self.error.set('A value is required')
         return valid
 
-class ValidCombobox(ValidateMixin,ttk.Combobox):
+
+class ValidCombobox(ValidateMixin, ttk.Combobox):
 
     def _focusout_validation(self, **kwargs):
         valid = True
@@ -76,11 +78,14 @@ class ValidCombobox(ValidateMixin,ttk.Combobox):
             self.error.set('A value is required')
         return valid
 
-class ValidSpinbox(ValidateMixin,ttk.Spinbox):
-    def __init__(self, *args, min_var=None, max_var=None, focus_update_var=None, from_='-Infinity', to='Infinity',**kwargs ) :
+
+class ValidSpinbox(ValidateMixin, ttk.Spinbox):
+    def __init__(self, *args, min_var=None, max_var=None, focus_update_var=None, from_='-Infinity', to='Infinity',
+                 **kwargs):
         super().__init__(*args, from_=from_, to=to, **kwargs)
-        self.resolution = Decimal(str(kwargs.get('increment','1.0')))
-        self.precision =(self.resolution.normalize().as_tuple().exponent)   # Just extracting exponent of the decimal so if it 1.2 then precision will be 2
+        self.resolution = Decimal(str(kwargs.get('increment', '1.0')))
+        self.precision = (
+            self.resolution.normalize().as_tuple().exponent)  # Just extracting exponent of the decimal so if it 1.2 then precision will be 2
 
         # there should always be a variable,
         # or some of our code will fail
@@ -109,7 +114,7 @@ class ValidSpinbox(ValidateMixin,ttk.Spinbox):
             pass
         # if current value is empty then delete eveything else set the back the current value
         if not current:
-            self.delete(0,tk.END)
+            self.delete(0, tk.END)
         else:
             self.variable.set(current)
 
@@ -124,13 +129,13 @@ class ValidSpinbox(ValidateMixin,ttk.Spinbox):
             pass
         # if current value is empty then delete eveything else set the back the current value
         if not current:
-            self.delete(0,tk.END)
+            self.delete(0, tk.END)
         else:
             self.variable.set(current)
 
         self.trigger_focusout_validation()
 
-    def _key_validation(self,char, index, current, proposed, action, **kwargs):
+    def _key_validation(self, char, index, current, proposed, action, **kwargs):
         valid = True
         max_val = self.cget('to')
 
@@ -163,8 +168,9 @@ class ValidSpinbox(ValidateMixin,ttk.Spinbox):
 
         return valid
 
+
 class LabelInput(tk.Frame):
-    """A widget with Label and Input Togather"""
+    """A widget with Label and Input To-gather"""
 
     field_types = {
         FT.string: (ValidEntry, tk.StringVar),
@@ -175,7 +181,8 @@ class LabelInput(tk.Frame):
         FT.boolean: (ttk.Checkbutton, tk.BooleanVar)
     }
 
-    def __init__(self, parent, label='', input_class=ttk.Entry, input_var=None, input_arg=None, label_args=None, field_spec=None, **kwargs):
+    def __init__(self, parent, label='', input_class=ttk.Entry, input_var=None, input_arg=None, label_args=None,
+                 field_spec=None, **kwargs):
         super().__init__(parent, **kwargs)
         input_arg = input_arg or {}
         label_args = label_args or {}
@@ -187,57 +194,58 @@ class LabelInput(tk.Frame):
             self.variable = input_var if input_var else var_type()
             # min max , increment
             if 'min' in field_spec and 'from_' not in input_arg:
-                 input_arg['from_'] = field_spec.get('min')
+                input_arg['from_'] = field_spec.get('min')
             if 'max' in field_spec and 'to' not in input_arg:
-                 input_arg['to'] = field_spec.get('max')
+                input_arg['to'] = field_spec.get('max')
             if 'inc' in field_spec and 'increment' not in input_arg:
-                 input_arg['increment'] = field_spec.get('inc')
-            #values
+                input_arg['increment'] = field_spec.get('inc')
+            # values
             if 'values' in field_spec and 'values' not in input_arg:
                 input_arg['values'] = field_spec.get('values')
         else:
             self.variable = input_var
         """Setting the Variable for the Input Class as Button , Checkbox and radio buttons have different behavior"""
-        if input_class in (ttk.Button , ttk.Combobox, ttk.Label, tk.LabelFrame):
+        if input_class in (ttk.Button, ttk.Combobox, ttk.Label, tk.LabelFrame):
             input_arg["text"] = label
             self.variable.set(label)
             input_arg["textvariable"] = self.variable
         elif input_class == tk.Listbox:
             input_arg["listvariable"] = self.variable
 
-        elif input_class in (ttk.Radiobutton,ttk.Checkbutton):
+        elif input_class in (ttk.Radiobutton, ttk.Checkbutton):
             input_arg["text"] = label
             self.variable.set(label)
             input_arg["variable"] = self.variable
         else:
-            self.label= ttk.Label(self, text=label, **label_args)
-            self.label.grid(row=0, column=0, sticky=(tk.W+tk.E))
+            self.label = ttk.Label(self, text=label, **label_args)
+            self.label.grid(row=0, column=0, sticky=(tk.W + tk.E))
             input_arg["textvariable"] = self.variable
 
         """Creating the input Class"""
-        self.input = input_class(self,**input_arg)
-        self.input.grid(row=1, column=0, sticky=(tk.W+tk.E))
+        self.input = input_class(self, **input_arg)
+        self.input.grid(row=1, column=0, sticky=(tk.W + tk.E))
         self.columnconfigure(0, weight=1)
+        if input_class not in (ttk.Button,):
+            self.error = getattr(self.input, 'error', tk.StringVar())
+            self.error.label = ttk.Label(self, textvariable=self.error)
+            self.error.label.grid(row=2, column=0, sticky=(tk.W + tk.E))
 
-        self.error = getattr(self.input, 'error', tk.StringVar())
-        self.error.label = ttk.Label(self, textvariable=self.error)
-        self.error.label.grid(row=2, column=0, sticky=(tk.W +tk.E))
-
-    def grid(self, sticky=(tk.W+tk.E), **kwargs):
+    def grid(self, sticky=(tk.W + tk.E), **kwargs):
         super().grid(sticky=sticky, **kwargs)
 
-    def bind(self,*args, **kwargs):
+    def bind(self, *args, **kwargs):
         self.input.bind(*args, **kwargs)
 
     """Defining Get Method for INPUT"""
+
     def get(self):
         try:
             if 'Listbox' in str(type(self.input)):
-                return ";".join([ self.input.get(item) for item in self.input.curselection()])
+                return ";".join([self.input.get(item) for item in self.input.curselection()])
             elif self.variable:
                 return self.variable.get()
             elif type(self.input) == tk.Text:
-                self.input.get('1.0',tk.END)
+                self.input.get('1.0', tk.END)
             else:
                 self.input.get()
         except (TypeError, tk.TclError):
@@ -259,15 +267,16 @@ class LabelInput(tk.Frame):
         elif type(self.input) == tk.Text:
             self.input.delete('1.0', tk.END)
             self.input.insert('1.0', value)
-        else:   # input must be an Entry-type widget with no variable
+        else:  # input must be an Entry-type widget with no variable
             self.input.delete('0', tk.END)
             self.input.insert('0', value)
 
     """Defining Select Method for listBox"""
-    def get_selected_values(self,*args, **kwargs):
+
+    def get_selected_values(self, *args, **kwargs):
         item_selected = ''
         for item in self.input.curselection():
-            item_selected = "{}{}\n".format(item_selected,self.input.get(item))
+            item_selected = "{}{}\n".format(item_selected, self.input.get(item))
 
         return item_selected.strip("\n")
 
@@ -384,7 +393,6 @@ class FolderTreeView(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.Y)
 
-
     def sort(self, tv, col):
         itemlist = list(tv.get_children(''))
         itemlist.sort(key=lambda x: tv.set(x, col))
@@ -416,7 +424,7 @@ class FolderTreeView(tk.Frame):
                                   path=abspath,
                                   name=p,
                                   open=False)
-                self.process_directory(iid, abspath, depth-1)
+                self.process_directory(iid, abspath, depth - 1)
             elif os.path.isfile(abspath) and '.robot' in p:
                 self.insert(parent,
                             'end',
@@ -428,7 +436,7 @@ class FolderTreeView(tk.Frame):
         self.path = os.path.abspath(path)
         self.entries = {"": self.path}
 
-        self._remove_items()    # Remove Tree Items
+        self._remove_items()  # Remove Tree Items
         self.sfilter = sfilter or []  # Adding the Filter
         # Insert Root
         iid = self.insert("", "end", os.path.basename(self.path))
@@ -442,7 +450,7 @@ class FolderTreeView(tk.Frame):
             self.tree.delete(item)
 
     def get_selected_item_path(self):
-        iid= self.tree.focus()
+        iid = self.tree.focus()
         print(self.entries[iid])
         return self.entries[iid]
 
@@ -453,17 +461,17 @@ class FolderTreeView(tk.Frame):
 class TabularTreeView(tk.Frame):
     def __init__(self, parent, columnNames=None, showCols='headings', selection_mode='extended', **kwargs):
         super().__init__(parent, **kwargs)
-        self.entries = {"": ""}  #Empty Value
+        self.entries = {"": ""}  # Empty Value
         self.columnNames = tuple(columnNames) or ()
         # Creating the Tree
-        self.tree = ttk.Treeview(self,column=self.columnNames, show=showCols, selectmode=selection_mode,**kwargs)
+        self.tree = ttk.Treeview(self, column=self.columnNames, show=showCols, selectmode=selection_mode, **kwargs)
 
         # x-axis and y-axis scroll bars
         ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
         xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
         self.tree.configure(yscroll=ysb.set, xscroll=xsb.set)
 
-        #Adding the Columns
+        # Adding the Columns
         for col in self.columnNames:
             self.tree.heading(col, text=col)
 
@@ -491,27 +499,26 @@ class TabularTreeView(tk.Frame):
             tv.move(iid, tv.parent(iid), index)
 
     def get_items(self):
-        return  [self.entries[id] for id in self.entries.keys()
-                   if id != '']
+        return [self.entries[id] for id in self.entries.keys()
+                if id != '']
 
     def get_selected_items(self):
-        selected_item = [ self.entries[id] for id in self.tree.selection()]
+        selected_item = [self.entries[id] for id in self.tree.selection()]
         return selected_item
 
     def get(self):
         return self.get_selected_items()
 
-
     def delete_selected_item(self):
         items = self.tree.selection()
-        if len(items)>0:
+        if len(items) > 0:
             for item in items:
                 self.tree.delete(item)
                 del self.entries[item]
 
-    def set_column_width(self,col_name,i_width):
+    def set_column_width(self, col_name, i_width):
         if col_name in self.columnNames:
-            self.tree.column(col_name,width=i_width)
+            self.tree.column(col_name, width=i_width)
 
     def insert_item(self, test_case, allow_duplicates=True, **kwargs):
         if not allow_duplicates:
@@ -531,7 +538,7 @@ class TabularTreeView(tk.Frame):
     def clear_items(self):
         for child in self.tree.get_children():
             self.tree.delete(child)
-        self.entries={"":""}
+        self.entries = {"": ""}
 
 
 class ContextItemMix:
@@ -591,5 +598,3 @@ class ScriptTabularTreeView(ContextItemMix, TabularTreeView):
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
             self.cMenu.grab_release()
-
-

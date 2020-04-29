@@ -5,7 +5,7 @@ import multiprocessing
 from sys import platform
 import os
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 # Making User files and directoies
 if not os.path.exists(AppConfig.user_folder_path):
