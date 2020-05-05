@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+
 from setuptools import setup, find_packages
 import robo_app
 
-with open("README.rst", "r") as fh:
+with open("README.rst") as fh:
     long_description = fh.read()
 
 setup(
@@ -11,7 +13,7 @@ setup(
     author_email="mandeepsinghdhiman@outlook.com",
     description="A GUI based Robot Test Executor",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    # long_description_content_type="text/markdown",
     url="https://github.com/MandyYdnam/Robo_App",
     packages=find_packages(),
     classifiers=[
