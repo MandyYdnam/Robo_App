@@ -14,6 +14,7 @@ def run_task(task):
     # print('worker_started:', multiprocessing.current_process().name, multiprocessing.current_process().pid)
     print("In Run task")
     print('BatchID:', task.get('Batch_ID'))
+    print('RUN_ID:', task.get('RUN_ID'))
     print('Test Name', task.get('ScriptName'))
     print('Test Source:', task.get('Source'))
     variable_list = []
@@ -55,7 +56,7 @@ def run_task(task):
         run(task.get('Source'), test=task.get('ScriptName'), stdout=stdout,
             variable=variable_list,  # variable=('Var1:From CMD', 'Var2:var2FromCmd'),
             outputdir=result_folder,
-            listener=TestRunnerAgent(task.get('Batch_ID')))
+            listener=TestRunnerAgent(task.get('Batch_ID'), task.get('RUN_ID')))
 
 
 def get_robot_test_list(suite, test_list=None):
@@ -149,6 +150,9 @@ class TestRunnerAgent:
     def __init__(self, *args):
         if len(args) == 1:
             self._batch_ID = int(args[0])
+        if len(args) == 2:
+            self._batch_ID = int(args[0])
+            self._run_ID = int(args[1])
         else:
             self._batch_ID = None
         # print('batch_id', self._batch_ID)
@@ -164,7 +168,7 @@ class TestRunnerAgent:
         print("Test Name", name)
         self._send_update(name, Status="'{}'".format(ScriptStatus.RUNNING),
                           Run_Count="Run_Count+1",
-                          StartTime="'{}'".format(self._normalize_date_time(attrs['starttime'])))
+                          Start_Time="'{}'".format(self._normalize_date_time(attrs['starttime'])))
 
     def end_test(self, name, attrs):
         print('Test Ended', attrs)
@@ -175,10 +179,15 @@ class TestRunnerAgent:
 
     def _send_update(self, name, **kwargs):
         """Send the Scrpit Updated to the Database"""
-        sql_query = "Update tbl_scripts SET {} WHERE batch_id={} AND ScriptName='{}'".format(
-            ",".join([str(key) + "=" + str(value) for (key, value) in kwargs.items()]), self._batch_ID, name)
-        # print('Sending Updates')
-        # print(sql_query)
+        # sql_query = "Update tbl_scripts SET {} WHERE batch_id={} AND ScriptName='{}'".format(
+        #     ",".join([str(key) + "=" + str(value) for (key, value) in kwargs.items()]), self._batch_ID, name)
+
+        sql_query = "Update tbl_testruns SET {} WHERE tbl_testruns.Run_ID={}".format(
+            ",".join([str(key) + "=" + str(value) for (key, value) in kwargs.items()]),
+            self._run_ID)
+
+        print('Sending Updates')
+        print(sql_query)
         try:
             db_con = m.Robo_Executor_SQLLiteDB()
             db_con.open_connection()
@@ -195,15 +204,11 @@ class TestRunnerAgent:
 class ExecutionPool:
     def __init__(self, task_list=None, processes=1, variable_list=None, *args, **kwargs):
         # Converting the Task row tuple as Dict
-        self.task_list = [task._asdict() for task in task_list]
+        # self.task_list = [task._asdict() for task in task_list]
+        self.task_list = [dict(task) for task in task_list]
         self.variable_list = variable_list
         self.process_pool = Pool(processes=processes)
         self.result = []
-
-
-    # def add_test(self,task_list):
-    #
-    #     self.task_list.append([ task._asdict() for task in task_list])
 
     def run_command(self):
         self.result = self.process_pool.map_async(run_task, self.task_list)

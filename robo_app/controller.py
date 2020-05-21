@@ -14,7 +14,7 @@ import re
 from sys import platform
 
 
-class CreateBatchController():
+class CreateBatchController:
     """The input form for the Batch Widgets"""
 
     def __init__(self, parent, *args, **kwargs):
@@ -29,14 +29,14 @@ class CreateBatchController():
                      'btn_createBookmark': self.callback_create_bookmark,
                      'btn_projLocation': self.call_back_select_folder,
                      'ckb_loadfrombookMark': self.call_back_on_select_load_book_marks}
-
         self.createbatch_view = v.CreateBatchForm(parent, callbacks, *args, **kwargs)
-        self.batch_model = m.BatchModel()
+        self.batch_model = m.CreateBatchDetailsModel()
         proj_loc = self._get_project_location()
         self.tags = r.get_project_tags(proj_loc)
         self.createbatch_view.populate_data(proj_loc, list(self.bookmark_dd.keys()),
                                             self.tags)
         self.createbatch_view.grid(row=1, column=0)
+
 
     def call_back_select_folder(self, folder_selected):
         # Update Config  File
@@ -95,16 +95,6 @@ class CreateBatchController():
             return proj_loc
         else:
             return AppConfig.user_folder_path
-
-    # def callback_create_batch(self):
-    #     if len(self.createbatch_view.get_batch_tests()) > 0:
-    #         self.createbatch_view.batch_details()
-    #         self.createbatch_view.load_device_list(self.get_device_list())
-    #     else:
-    #         messagebox.showinfo("Create Batch Error",
-    #                             "Are you sure you want to create empty batch. I don't think so. Please add some "
-    #                             "scripts.",
-    #                             parent=self.createbatch_view)
 
     def callback_create_batch2(self):
         if len(self.createbatch_view.get_batch_tests()) > 0:
@@ -251,7 +241,7 @@ class CreateBatchDetailsController:
     def callback_create_batch(self):
 
         error_list = self.create_batch_details_view.get_errors()
-
+        view_data = self.create_batch_details_view.get()
         # Removing the Rquired Error If its not Mobile App
         if self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() != 'Mobile':
             error_list.pop('txb_mc_user_name', '')
@@ -261,33 +251,34 @@ class CreateBatchDetailsController:
 
         if len(error_list) == 0:
             """Controls Batch Creation"""
-            batch_name = self.create_batch_details_view.inputs['txb_batchName'].variable.get()
-            test_type = self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get()
             browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace("\n",
                                                                                                              ';') if \
                 self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
                 self.create_batch_details_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
-            thread_count = self.create_batch_details_view.inputs['txb_batchNumberOfThreads'].variable.get()
-            result_location = self.batch_data.get('result_location')
-            project_location = self.batch_data.get('project_location')
 
-            batch_id = self.create_batch_details_model.cmd_insert_batch_details(batch_name, test_type, browser_device_list,
-                                                                 thread_count, result_location, project_location)
+            self.batch_data['batch_name']= view_data['txb_batchName']
+            self.batch_data['test_type'] = view_data['rb_applicationTypeWeb']
+            self.batch_data['browser_device_list'] = browser_device_list
+            self.batch_data['thread_count'] = view_data['txb_batchNumberOfThreads']
+            self.batch_data['user_name'] = RunTimeData().getdata('alm_user', RunTimeData().getdata('system_user'))
+            batch_id = self.create_batch_details_model.cmd_insert_batch_details(self.batch_data)
+
             if batch_id:
                 browser_device_list = itertools.cycle(browser_device_list.split(";"))
                 test_list = self.batch_data.get('test_list', [])
 
-                self.create_batch_details_model.cmd_insert_scripts_in_batch2(batch_id, browser_device_list, test_list)
+                self.create_batch_details_model.insert_script(batch_id, browser_device_list, test_list)
                 # Adding ALM and Mobile Center Components
-                alm_test_plan = self.create_batch_details_view.inputs['txb_alm_plan_path'].variable.get()
-                alm_test_lab = self.create_batch_details_view.inputs['txb_alm_lab_path'].variable.get()
-                alm_test_set = self.create_batch_details_view.inputs['txb_alm_test_set_name'].variable.get()
-                test_language = self.create_batch_details_view.inputs['rb_application_lang_EN'].variable.get()
-                env_url = self.create_batch_details_view.inputs['lstbx_url_center'].variable.get()
-                if self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile':
+                alm_test_plan = view_data['txb_alm_plan_path']
+                alm_test_lab = view_data['txb_alm_lab_path']
+                alm_test_set = view_data['txb_alm_test_set_name']
+                test_language = view_data['rb_application_lang_EN']
+                env_url = view_data['lstbx_url_center']
+
+                if view_data['rb_applicationTypeWeb'] == 'Mobile':
                     mc_server_url = self.create_batch_details_view.inputs['lstbx_mobile_center'].get()
-                    mc_server_user = self.create_batch_details_view.inputs['txb_mc_user_name'].variable.get()
-                    mc_server_pass = self.create_batch_details_view.inputs['txb_mc_user_pass'].variable.get()
+                    mc_server_user = view_data['txb_mc_user_name']
+                    mc_server_pass = view_data['txb_mc_user_pass']
                     self.create_batch_details_model.cmd_insert_command_variable(batch_id, alm_test_plan_path=alm_test_plan,
                                                                  alm_test_lab_path=alm_test_lab,
                                                                  alm_test_set_name=alm_test_set,
@@ -315,7 +306,7 @@ class CreateBatchDetailsController:
                                     parent=self.create_batch_details_view)
             else:
                 messagebox.showerror('Error', 'Unable to Create Batch')
-            self.create_batch_details_view.inputs['win_batchdetails'].destroy()
+            self.create_batch_details_view.unload_gui()
         else:
             messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
                                  parent=self.create_batch_details_view)
@@ -360,40 +351,39 @@ class BatchMonitorController:
         # print('Opening Batch Details')
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()
         self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
-                                                                                  batch_id=row[0].Batch_ID)
+                                                                                  batch_id=row[0]['Batch_ID'])
 
     def callback_tree_update(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
         callback = {'refresh': self.populate_batch_data}
-        self.batch_update_controller = BatchUpdateController(self.batch_monitor_view, batch_id=row.Batch_ID,
+        self.batch_update_controller = BatchUpdateController(self.batch_monitor_view, batch_id=row['Batch_ID'],
                                                              callbacks=callback)
 
     def callback_tree_open(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
         self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
-                                                                                  batch_id=row.Batch_ID)
+                                                                                  batch_id=row['Batch_ID'])
 
     def callback_tree_on_double_click(self):
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()[0]
         self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
-                                                                                  batch_id=row.Batch_ID)
+                                                                                  batch_id=row['Batch_ID'])
 
     def callback_tree_rerun(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
         # self.batch_monitor_model.rerun_batch(row.Batch_ID)
 
-        if not self.execution_threads.get(row.Batch_ID, None) or self.execution_threads.get(row.Batch_ID,
+        if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
                                                                                             None).remaining_task() == 0:
-            batch_details = self.batch_monitor_model.get_batch_details(row.Batch_ID)[0]
-            # command_variables = self.batch_monitor_model.get_commnad_variables(row.Batch_ID)[0]
-            test_list = self.batch_monitor_model.get_scripts(row.Batch_ID, re_run_scripts=True)
-            self.execution_threads[row.Batch_ID] = r.ExecutionPool(task_list=test_list,
-                                                                   processes=batch_details.ThreadCount)
+            batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
+            test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'], re_run_scripts=True)
+            self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
+                                                                   processes=batch_details['ThreadCount'])
 
-            self.execution_threads[row.Batch_ID].run_command()
+            self.execution_threads[row['Batch_ID']].run_command()
         else:
             messagebox.showwarning("Batch Execution Monitor", "Batch is already running. Please try later after "
                                                               "stopping the batch")
@@ -401,35 +391,34 @@ class BatchMonitorController:
     def callback_tree_stop(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
-        self.batch_monitor_model.stop_batch(row.Batch_ID)
-        if self.execution_threads.get(row.Batch_ID, None):
-            self.execution_threads[row.Batch_ID].terminate_batch()
+        self.batch_monitor_model.stop_batch(row['Batch_ID'])
+        if self.execution_threads.get(row['Batch_ID'], None):
+            self.execution_threads[row['Batch_ID']].terminate_batch()
             # Remove the Batch From the Execution Thread
-            self.execution_threads.pop(row.Batch_ID)
+            self.execution_threads.pop(row['Batch_ID'])
 
     def callback_tree_start(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
 
-        if not self.execution_threads.get(row.Batch_ID, None) or self.execution_threads.get(row.Batch_ID,
+        if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
                                                                                             None).remaining_task() == 0:
-            batch_details = self.batch_monitor_model.get_batch_details(row.Batch_ID)[0]
-            # command_variables = self.batch_monitor_model.get_commnad_variables(row.Batch_ID)[0]
-            test_list = self.batch_monitor_model.get_scripts(row.Batch_ID)
-            self.execution_threads[row.Batch_ID] = r.ExecutionPool(task_list=test_list,
-                                                                   processes=batch_details.ThreadCount)
+            batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
+            test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'])
+            self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
+                                                                   processes=batch_details['ThreadCount'])
 
-            self.execution_threads[row.Batch_ID].run_command()
+            self.execution_threads[row['Batch_ID']].run_command()
 
     def callback_clone_batch(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
-        data_rows= self.batch_monitor_model.get_clone_data(row.Batch_ID)
-        test_list = [{'name': row.name, 'doc': row.doc, 'tags': row.tags, 'source': row.source} for row in data_rows]
+        data_rows = self.batch_monitor_model.get_clone_data(row['Batch_ID'])
+        # test_list = [{'name': row.name, 'doc': row.doc, 'tags': row.tags, 'source': row.source} for row in data_rows]
 
-        batch_data = {'test_list': test_list,
-                      'result_location': data_rows[0].result_Location,
-                      'project_location': data_rows[0].project_Location}
+        batch_data = {'test_list': data_rows,
+                      'result_location': data_rows[0]['result_Location'],
+                      'project_location': data_rows[0]['project_Location']}
         CreateBatchDetailsController(self.batch_monitor_view, batch_data=batch_data)
 
 
@@ -458,12 +447,12 @@ class BatchExecutionMonitorController:
     def _load_batch_information(self):
         batch_data = self.batch_exec_monitor_model.get_batch_details(self.batch_id)
 
-        passed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Passed").ScriptCount
-        failed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Failed").ScriptCount
+        passed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Passed")['ScriptCount']
+        failed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Failed")['ScriptCount']
 
-        self.batch_exec_monitor_view.load_batch_information(batch_data.Batch_Name,
-                                                            batch_data.CreationDate,
-                                                            batch_data.ScriptCount,
+        self.batch_exec_monitor_view.load_batch_information(batch_data['Batch_Name'],
+                                                            batch_data['CreationDate'],
+                                                            batch_data['ScriptCount'],
                                                             passed_scripts, failed_scripts)
 
     def _load_scripts_information(self):
@@ -486,24 +475,24 @@ class BatchExecutionMonitorController:
         # if self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection != "":
         row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[
             self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
-        if row.Log_path and os.path.exists(row.Log_path):
-            print("Log File Path:", row.Log_path)
+        if row['Log_path'] and os.path.exists(row['Log_path']):
+            print("Log File Path:", row['Log_path'])
             if platform == 'darwin':
-                log_path = "file:///" + row.Log_path
+                log_path = "file:///" + row['Log_path']
             else:
-                log_path = row.Log_path
+                log_path = row['Log_path']
             webbrowser.open(log_path)
         else:
                 messagebox.showinfo("Log Not Found", "Log file not found.")
 
     def callback_tree_open_on_double_click(self):
         row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].get_selected_items()[0]
-        if row.Log_path and os.path.exists(row.Log_path):
-            print("Log File Path:", row.Log_path)
+        if row['Log_path'] and os.path.exists(row['Log_path']):
+            print("Log File Path:", row['Log_path'])
             if platform == 'darwin':
-                log_path = "file:///" + row.Log_path
+                log_path = "file:///" + row['Log_path']
             else:
-                log_path = row.Log_path
+                log_path = row['Log_path']
             webbrowser.open(log_path)
         else:
                 messagebox.showinfo("Log Not Found", "Log file not found.")
@@ -512,7 +501,7 @@ class BatchExecutionMonitorController:
         if self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection != "":
             row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[
                 self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
-            self.batch_exec_monitor_model.rerun_script(self.batch_id, row.Script_ID)
+            self.batch_exec_monitor_model.rerun_script(row['RUN_ID'])
             self.refresh_script()
             self._load_batch_information()
 
@@ -523,13 +512,13 @@ class BatchExecutionMonitorController:
             # callback = {'refresh': self.refresh_script}
             callback = {}
             self.script_update_controller = ScriptUpdateController(self.batch_exec_monitor_view, self.batch_id,
-                                                                   row.Script_ID, callbacks=callback)
+                                                                   row['RUN_ID'], callbacks=callback)
 
     def callback_tree_stop(self):
         if self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection != "":
             row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[
                 self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
-            self.batch_exec_monitor_model.stop_script(self.batch_id, row.Script_ID)
+            self.batch_exec_monitor_model.stop_script(row['RUN_ID'])
             self.refresh_script()
             self._load_batch_information()
 
@@ -574,7 +563,7 @@ class BatchUpdateController:
                                                                                      data['txb_mc_user_pass'],
                                                                                      env_url=data['lstbx_url_center'])
 
-                bol_script_update = self.batch_update_model.cmd_update_scripts(self.batch_id,
+                bol_script_update = self.batch_update_model.cmd_update_tests(self.batch_id,
                                                                                device_browser_list.split(';'))
                 self.batch_update_view.destroy()
                 if bol_batch_update and bol_var_update and bol_script_update:
@@ -583,7 +572,7 @@ class BatchUpdateController:
             messagebox.showerror("Unable to Update", "Please contact Dev's.")
 
     def get_device_list(self):
-        project_path = self.batch_update_model.get_batch(self.batch_id)[0].Project_Location
+        project_path = self.batch_update_model.get_batch(self.batch_id)[0]["Project_Location"]
         patrn = "[\dA-Za-z-]+"
         file_loc = os.path.join(project_path, r'Resources/ConfigFiles/DeviceCapList.py')
         if not os.path.exists(file_loc):
@@ -598,21 +587,21 @@ class BatchUpdateController:
         return device_list
 
 
-class ScriptUpdateController():
+class ScriptUpdateController:
     """The input form for the Batch Execution Monitor Widgets"""
 
-    def __init__(self, parent, batch_id, script_id, callbacks=None, *args, **kwargs):
+    def __init__(self, parent, batch_id, run_id, callbacks=None, *args, **kwargs):
         # super().__init__(parent, *args, **kwargs)
         self.batch_id = batch_id
-        self.script_id = script_id
+        self.run_id = run_id
         self.callbacks = callbacks if callbacks else {}
         self.callbacks['btn_update'] = self.callback_update_script_details
-        self.script_update_view = v.ScriptUpdate(parent, self.callbacks, self.script_id, *args, **kwargs)
+        self.script_update_view = v.ScriptUpdate(parent, self.callbacks, self.run_id, *args, **kwargs)
 
         self.script_update_model = m.ScriptUpdateModel()
         device_list = self.get_device_list()
 
-        self.script_update_view.populate(self.script_update_model.get_script_details(self.script_id)[0], device_list)
+        self.script_update_view.populate(self.script_update_model.get_test_details(self.run_id), device_list)
 
     def callback_update_script_details(self):
         try:
@@ -628,7 +617,7 @@ class ScriptUpdateController():
                 data = self.script_update_view.get()
                 device_browser_list = data['lstbx_device'] if data['rb_applicationTypeWeb'] == 'Mobile' else data[
                     'lstbx_browser']
-                bol_script_update = self.script_update_model.cmd_update_script(self.script_id, device_browser_list)
+                bol_script_update = self.script_update_model.cmd_update_test(self.run_id, device_browser_list)
 
                 self.script_update_view.destroy()
                 if bol_script_update:
@@ -637,13 +626,10 @@ class ScriptUpdateController():
             messagebox.showerror("Unable to Update", "Please contact Dev's.")
 
     def get_device_list(self):
-        project_path = self.script_update_model.get_batch(self.batch_id)[0].Project_Location
+        project_path = self.script_update_model.get_batch(self.batch_id)["Project_Location"]
         patrn = "[\dA-Za-z-]+"
         file_loc = os.path.join(project_path, r'Resources/ConfigFiles/DeviceCapList.py')
         if not os.path.exists(file_loc):
-            # file_loc = 'robo_app/devicelist.txt'
-            # with open(file_loc, 'r') as file:
-            #     device_list = [re.findall(patrn, line)[0] for line in file]
             device_list = AppConfig.DEVICE_LIST
         else:
             with open(file_loc, 'r') as device_file:
@@ -702,7 +688,7 @@ class CreateBookMarkController():
                                  parent=self.create_bookmark_view)
 
 
-class ALMLoginController():
+class ALMLoginController:
     """Controller for ALM Login Screen"""
 
     def __init__(self, parent, *args, **kwargs):

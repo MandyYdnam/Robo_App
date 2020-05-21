@@ -76,6 +76,7 @@ class Bookmarks:
 class RunTimeData(object):
     __instance = None
     __data = {}
+
     def __new__(cls):
         if RunTimeData.__instance is None:
             RunTimeData.__instance = object.__new__(cls)

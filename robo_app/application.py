@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from . import controller as c
 from .constants import AppConfig
+from . import models as m
+from .util import RunTimeData
 
 
 class Application(tk.Tk):
@@ -27,6 +29,9 @@ class Application(tk.Tk):
 
         if AppConfig.USE_ALM:
             self.alm_login_controller = c.ALMLoginController(self)
+        'Update user information to the DB'
+        m.InitializeModel(AppConfig.user_db_location).add_user_details(
+            {'user_name': RunTimeData().getdata('alm_user', RunTimeData().getdata('system_user'))})
 
     def _activate_create_batch(self):
         if self.create_batch is None:
