@@ -4,8 +4,14 @@ from .application import Application
 import multiprocessing
 from sys import platform
 import os
+import getpass
+from .util import RunTimeData
+import datetime
 
 __version__ = "0.0.9"
+
+RunTimeData().setdata('system_user', getpass.getuser())
+RunTimeData().setdata('login_time', datetime.datetime.now())
 
 # Making User files and directoies
 if not os.path.exists(AppConfig.user_folder_path):
@@ -22,7 +28,8 @@ if not os.path.exists(AppConfig.user_config_file):
 # Create Tables
 initialize_db_model = InitializeModel()
 if not initialize_db_model.is_batch_table():
-    print("initialize batch")
+    print("initialize batch and user")
+    initialize_db_model.cmd_create_user_table()
     initialize_db_model.cmd_create_batch_table()
 
 if not initialize_db_model.is_script_table():
@@ -32,6 +39,8 @@ if not initialize_db_model.is_script_table():
 if not initialize_db_model.is_command_var_table():
     print("initialize command")
     initialize_db_model.cmd_create_command_var_table()
+
+    initialize_db_model.cmd_create_test_run_table()
 
 
 def main():

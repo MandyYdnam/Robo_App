@@ -455,7 +455,8 @@ class CreateBatchDetailsForm(tk.Frame):
         # Create a top Level window
         ############################
         win_batchdetails = tk.Toplevel(self)
-        self.inputs['win_batchdetails'] = win_batchdetails
+        self.win_batchdetails = win_batchdetails
+        # self.inputs['win_batchdetails'] = win_batchdetails
         win_batchdetails.title = "Create Batch"
         win_batchdetails.lift()
         win_batchdetails.grab_set()
@@ -656,7 +657,8 @@ class CreateBatchDetailsForm(tk.Frame):
                 data[key] = widget.get()
         return data
 
-
+    def unload_gui(self):
+        self.win_batchdetails.destroy()
 class BatchMonitor(tk.Frame):
     """The input form for the Batch Widgets"""
 
@@ -732,13 +734,13 @@ class BatchMonitor(tk.Frame):
         self.inputs['trv_batches'].clear_items()
         for batch in batches:
             self.inputs['trv_batches'].insert_item(batch, allow_duplicates=False,
-                                                   values=(batch.Batch_ID,
-                                                           batch.Batch_Name,
-                                                           batch.CreationDate,
-                                                           batch.ThreadCount,
-                                                           batch.ScriptCount,
-                                                           batch.TestType,
-                                                           batch.Browsers_OR_Devices))
+                                                   values=(batch['Batch_ID'],
+                                                           batch['Batch_Name'],
+                                                           batch['CreationDate'],
+                                                           batch['ThreadCount'],
+                                                           batch['ScriptCount'],
+                                                           batch['TestType'],
+                                                           batch['Browsers_OR_Devices']))
 
 
 class BatchExecutionMonitor(tk.Toplevel):
@@ -869,14 +871,14 @@ class BatchExecutionMonitor(tk.Toplevel):
         count = 1
         for row in scripts:
             self.inputs['trv_batchScripts'].insert_item(row, allow_duplicates=False,
-                                                        values=(count, row.ScriptName,
-                                                                row.Documentation,
-                                                                os.path.split(row.Source)[1],
-                                                                row.Status,
-                                                                row.StartTime,
-                                                                row.End_Time,
-                                                                row.Device_Browser,
-                                                                row.Run_Count))
+                                                        values=(count, row['ScriptName'],
+                                                                row['Documentation'],
+                                                                os.path.split(row['Source'])[1],
+                                                                row['Status'],
+                                                                row['Start_Time'],
+                                                                row['End_Time'],
+                                                                row['Device_Browser'],
+                                                                row['Run_Count']))
             count += 1
 
     def refresh_scripts(self, scripts):
@@ -887,14 +889,14 @@ class BatchExecutionMonitor(tk.Toplevel):
         count = 1
         for row in scripts:
             self.inputs['trv_batchScripts'].insert_item(row, allow_duplicates=False,
-                                                        values=(count, row.ScriptName,
-                                                                row.Documentation,
-                                                                os.path.split(row.Source)[1],
-                                                                row.Status,
-                                                                row.StartTime,
-                                                                row.End_Time,
-                                                                row.Device_Browser,
-                                                                row.Run_Count))
+                                                        values=(count, row['ScriptName'],
+                                                                row['Documentation'],
+                                                                os.path.split(row['Source'])[1],
+                                                                row['Status'],
+                                                                row['Start_Time'],
+                                                                row['End_Time'],
+                                                                row['Device_Browser'],
+                                                                row['Run_Count']))
             count += 1
     #
     # def refresh_batch_labels(self, batch_name, script_count, scripts_passed, scripts_failed):
@@ -1092,15 +1094,15 @@ class BatchUpdate(tk.Toplevel):
             self.frames['frame_mc_details'].grid_remove()
 
     def populate(self, batch_details, device_list):
-        self.inputs['txb_batchName'].variable.set(batch_details.Batch_Name)
-        self.inputs['txb_batchNumberOfThreads'].variable.set(batch_details.ThreadCount)
-        self.inputs['rb_applicationTypeWeb'].variable.set(batch_details.TestType)
-        self.inputs['rb_application_lang_FR'].variable.set(batch_details.ENV_LANGUAGE)
+        self.inputs['txb_batchName'].variable.set(batch_details["Batch_Name"])
+        self.inputs['txb_batchNumberOfThreads'].variable.set(batch_details["ThreadCount"])
+        self.inputs['rb_applicationTypeWeb'].variable.set(batch_details["TestType"])
+        self.inputs['rb_application_lang_FR'].variable.set(batch_details["ENV_LANGUAGE"])
         self.inputs['lstbx_device'].variable.set(device_list)
-        if batch_details.TestType != 'Web':
-            self.inputs['lstbx_mobile_center'].variable.set(batch_details.ENV_MC_SERVER)
-            self.inputs['txb_mc_user_name'].variable.set(batch_details.ENV_MC_USER_NAME)
-            self.inputs['txb_mc_user_pass'].variable.set(batch_details.ENV_MC_USER_PASS)
+        if batch_details["TestType"] != 'Web':
+            self.inputs['lstbx_mobile_center'].variable.set(batch_details["ENV_MC_SERVER"])
+            self.inputs['txb_mc_user_name'].variable.set(batch_details["ENV_MC_USER_NAME"])
+            self.inputs['txb_mc_user_pass'].variable.set(batch_details["ENV_MC_USER_PASS"])
             self.inputs['lstbx_browser'].grid_remove()
             self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
             self.frames['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
@@ -1110,10 +1112,10 @@ class BatchUpdate(tk.Toplevel):
             self.frames['frame_mc_details'].grid_remove()
             self.inputs['lstbx_device'].grid_remove()
             self.inputs['lstbx_browser'].grid(row=0, column=0, padx=10)
-            self.inputs['lstbx_url_center'].variable.set(batch_details.ENV_URL)
-        self.inputs['txb_alm_plan_path'].variable.set(batch_details.ALMTestPlanPath)
-        self.inputs['txb_alm_lab_path'].variable.set(batch_details.ALMTestLabPath)
-        self.inputs['txb_alm_test_set_name'].variable.set(batch_details.ALMTestSetName)
+            self.inputs['lstbx_url_center'].variable.set(batch_details["ENV_URL"])
+        self.inputs['txb_alm_plan_path'].variable.set(batch_details["ALMTestPlanPath"])
+        self.inputs['txb_alm_lab_path'].variable.set(batch_details["ALMTestLabPath"])
+        self.inputs['txb_alm_test_set_name'].variable.set(batch_details["ALMTestSetName"])
 
     # Get the data for the all the Widgets
     def get(self):
@@ -1312,14 +1314,14 @@ class ScriptUpdate(tk.Toplevel):
         self.inputs['lstbx_device'].variable.set(device_list)
 
     def populate(self, batch_details, device_list):
-        self.inputs['txb_ScriptName'].variable.set(batch_details.ScriptName)
-        self.inputs['rb_applicationTypeWeb'].variable.set(batch_details.TestType)
-        self.inputs['rb_application_lang_FR'].variable.set(batch_details.ENV_LANGUAGE)
+        self.inputs['txb_ScriptName'].variable.set(batch_details["ScriptName"])
+        self.inputs['rb_applicationTypeWeb'].variable.set(batch_details["TestType"])
+        self.inputs['rb_application_lang_FR'].variable.set(batch_details["ENV_LANGUAGE"])
         self.inputs['lstbx_device'].variable.set(device_list)
-        if batch_details.TestType != 'Web':
-            self.inputs['lstbx_mobile_center'].variable.set(batch_details.ENV_MC_SERVER)
-            self.inputs['txb_mc_user_name'].variable.set(batch_details.ENV_MC_USER_NAME)
-            self.inputs['txb_mc_user_pass'].variable.set(batch_details.ENV_MC_USER_PASS)
+        if batch_details["TestType"] != 'Web':
+            self.inputs['lstbx_mobile_center'].variable.set(batch_details["ENV_MC_SERVER"])
+            self.inputs['txb_mc_user_name'].variable.set(batch_details["ENV_MC_USER_NAME"])
+            self.inputs['txb_mc_user_pass'].variable.set(batch_details["ENV_MC_USER_PASS"])
             self.inputs['lstbx_browser'].grid_remove()
             self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
             self.frames['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
@@ -1329,10 +1331,10 @@ class ScriptUpdate(tk.Toplevel):
             self.frames['frame_url_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_device'].grid_remove()
             self.inputs['lstbx_browser'].grid(row=0, column=0, padx=10)
-            self.inputs['lstbx_url_center'].variable.set(batch_details.ENV_URL)
-        self.inputs['txb_alm_plan_path'].variable.set(batch_details.ALMTestPlanPath)
-        self.inputs['txb_alm_lab_path'].variable.set(batch_details.ALMTestLabPath)
-        self.inputs['txb_alm_test_set_name'].variable.set(batch_details.ALMTestSetName)
+            self.inputs['lstbx_url_center'].variable.set(batch_details["ENV_URL"])
+        self.inputs['txb_alm_plan_path'].variable.set(batch_details["ALMTestPlanPath"])
+        self.inputs['txb_alm_lab_path'].variable.set(batch_details["ALMTestLabPath"])
+        self.inputs['txb_alm_test_set_name'].variable.set(batch_details["ALMTestSetName"])
 
     # Get the data for the all the Widgets
     def get(self):
