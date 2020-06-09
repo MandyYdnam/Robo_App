@@ -540,6 +540,9 @@ class TabularTreeView(tk.Frame):
             self.tree.delete(child)
         self.entries = {"": ""}
 
+    def grid(self, sticky=(tk.W + tk.E), **kwargs):
+        super().grid(sticky=sticky, **kwargs)
+
 
 class ContextItemMix:
     def __init__(self, parent, *args, **kwargs):

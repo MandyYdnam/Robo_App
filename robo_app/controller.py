@@ -35,7 +35,7 @@ class CreateBatchController:
         self.tags = r.get_project_tags(proj_loc)
         self.createbatch_view.populate_data(proj_loc, list(self.bookmark_dd.keys()),
                                             self.tags)
-        self.createbatch_view.grid(row=1, column=0)
+        # self.createbatch_view.grid(row=1, column=0)
 
 
     def call_back_select_folder(self, folder_selected):
@@ -338,7 +338,7 @@ class BatchMonitorController:
     def load_gui(self):
         # Load batches in UI
         self.populate_batch_data()
-        self.batch_monitor_view.grid(row=1, column=0)
+        # self.batch_monitor_view.grid(row=1, column=0)
 
     def populate_batch_data(self):
         batches = self.batch_monitor_model.get_batches()
@@ -743,3 +743,17 @@ class ALMLoginController:
         else:
             messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
                                  parent=self.login_view)
+
+
+class StatisticsController:
+    """The input form for the Batch Widgets"""
+
+    def __init__(self, parent, *args, **kwargs):
+
+        callbacks = {}
+
+        self.stats_view = v.StatisticsForm(parent, callbacks, *args, **kwargs)
+        # self.batch_monitor_model = m.BatchMonitorModel()
+
+
+
