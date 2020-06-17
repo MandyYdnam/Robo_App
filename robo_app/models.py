@@ -803,7 +803,8 @@ class CreateBookMarkModel:
             os.makedirs(base_dir)
         return self.user_bm_dd.update_bookmarks(data_dict)
 
-class StatsModel:
+
+class StatisticsModel:
 
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
@@ -823,128 +824,27 @@ class StatsModel:
         if cursor.description is not None:
             return cursor.fetchall()
 
-    def get_batches(self, MaxRows=20):
-        """Update All No Run Scripts to Stop"""
+    def get_test_execution_data(self, from_date, to_date):
+        """Get test execution data"""
         try:
-            sql_query = """Select tbl_batch.Batch_ID, Batch_Name, CreationDate, ThreadCount, TestType, Browsers_OR_Devices , COUNT(tbl_testruns.Script_ID) AS ScriptCount from tbl_batch LEFT JOIN tbl_testruns ON tbl_batch.Batch_ID=tbl_testruns.Batch_ID GROUP BY tbl_batch.Batch_ID, Batch_Name, CreationDate, ThreadCount, TestType, Browsers_OR_Devices ORDER BY tbl_batch.Batch_ID DESC"""
-            return self.query(sql_query, ())
-        except Exception as e:
-            print(e)
-            raise e
-
-    def stop_batch(self, batch_id):
-        try:
-            sql_query = "Update tbl_testruns SET Status ='Stopped' WHERE batch_id=? AND Status IN ('No Run','Re Run','Running')"
-            return self.query(sql_query, (batch_id,))
-        except Exception as e:
-            print(e)
-            raise e
-
-    def rerun_batch(self, batch_id):
-
-        try:
-            sql_query = "Update tbl_testruns SET Status ='Re Run' WHERE batch_id=?"
-            return self.query(sql_query, (batch_id,))
-        except Exception as e:
-            print(e)
-            raise e
-
-    def get_scripts(self, batch_id, re_run_scripts=False):
-        try:
-
-            if re_run_scripts:
-                sql_query = """Select 
-tbl_batch.Batch_ID, 
-tbl_batch.Result_Location, 
-tbl_batch.ThreadCount,
-tbl_batch.TestType,
-tbl_batch.Project_Location ,
-tbl_scripts.ScriptName,
-tbl_testruns.Device_Browser,
-tbl_testruns.RUN_ID,
-tbl_scripts.Source,
-tbl_command_variables.ENV_MC_SERVER,
-tbl_command_variables.ENV_MC_USER_NAME,
-tbl_command_variables.ENV_MC_USER_PASS,
-tbl_command_variables.ENV_URL,
-tbl_command_variables.ENV_LANGUAGE,
-tbl_command_variables.ALMTestPlanPath,
-tbl_command_variables.ALMTestLabPath,
-tbl_command_variables.ALMTestSetName,
-tbl_command_variables.AlmUrl,
-tbl_command_variables.almuserid,
-tbl_command_variables.almuserpswd,
-tbl_command_variables.almdomain,
-tbl_command_variables.almproject 
-
-from 
-tbl_batch ,tbl_scripts,tbl_command_variables,tbl_testruns
-
-WHERE 
-tbl_batch.Batch_ID=tbl_testruns.Batch_ID 
-AND 
-tbl_batch.Batch_ID=tbl_command_variables.Batch_ID 
-AND 
+            sql_query = """SELECT 
+tbl_testruns.Batch_ID,
+tbl_scripts.ScriptName, 
+tbl_scripts.Source, 
+tbl_testruns.Status, 
+tbl_testruns.Start_Time, 
+tbl_testruns.End_Time, 
+tbl_testruns.Device_Browser, 
+tbl_testruns.USER_NAME, 
+tbl_testruns.Run_Count  
+FROM tbl_testruns, tbl_scripts 
+WHERE
 tbl_testruns.Script_ID=tbl_scripts.Script_ID 
-AND 
-tbl_batch.Batch_ID={}""".format(
-                    batch_id)
-            else:
-                sql_query = """Select 
-tbl_batch.Batch_ID, 
-tbl_batch.Result_Location, 
-tbl_batch.ThreadCount,
-tbl_batch.TestType, 
-tbl_batch.Project_Location, 
-tbl_scripts.ScriptName,
-tbl_testruns.Device_Browser,
-tbl_testruns.RUN_ID,
-tbl_scripts.Source,
-tbl_command_variables.ENV_MC_SERVER,
-tbl_command_variables.ENV_MC_USER_NAME,
-tbl_command_variables.ENV_MC_USER_PASS,
-tbl_command_variables.ENV_URL,
-tbl_command_variables.ENV_LANGUAGE,
-tbl_command_variables.ALMTestPlanPath,
-tbl_command_variables.ALMTestLabPath,
-tbl_command_variables.ALMTestSetName,
-tbl_command_variables.AlmUrl,
-tbl_command_variables.almuserid,
-tbl_command_variables.almuserpswd,
-tbl_command_variables.almdomain,
-tbl_command_variables.almproject 
-FROM
-tbl_batch ,tbl_scripts, tbl_command_variables,tbl_testruns
-WHERE tbl_batch.Batch_ID=tbl_testruns.Batch_ID  
-AND 
-tbl_batch.Batch_ID=tbl_command_variables.Batch_ID 
-AND 
-tbl_testruns.Script_ID=tbl_scripts.Script_ID 
-AND 
-tbl_testruns.Status NOT IN ('Passed', 'Failed','Stopped') 
-AND tbl_batch.Batch_ID={}""".format(
-                    batch_id)
-
-            return self.query(sql_query, ())
+AND
+tbl_testruns.Start_Time BETWEEN ? AND ?"""
+            return self.query(sql_query, (to_date, from_date))
         except Exception as e:
             print(e)
             raise e
 
-    def get_clone_data(self, batch_id):
-        try:
-            sql_query = "SELECT ScriptName as 'name', Documentation as 'doc', Tag as 'tags', Source as 'source', tbl_batch.Result_Location as 'result_Location',tbl_batch.Project_Location as 'project_Location' FROM tbl_scripts, tbl_batch, tbl_testruns WHERE tbl_batch.Batch_ID=tbl_testruns.Batch_ID AND tbl_testruns.Script_ID=tbl_scripts.Script_ID AND tbl_batch.Batch_ID={}".format(
-                batch_id)
-            return self.query(sql_query, ())
-        except Exception as e:
-            print(e)
-            raise e
-
-    def get_batch_details(self, batch_id):
-        try:
-            sql_query = "Select* from tbl_batch WHERE  tbl_batch.Batch_ID={}".format(batch_id)
-
-            return self.query(sql_query, ())
-        except Exception as e:
-            print(e)
-            raise
 

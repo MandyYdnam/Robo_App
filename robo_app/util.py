@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 import json
 from json import JSONDecodeError
+from datetime import datetime
 
 
 class AppConfigParser(ConfigParser):
@@ -15,7 +16,7 @@ class AppConfigParser(ConfigParser):
         with open(self.file_name, 'w') as file:
             self.write(file)
 
-    def get_configuration_value(self, config_section, config_key ):
+    def get_configuration_value(self, config_section, config_key):
         self.__readfile()
         if self.has_option(config_section, config_key):
             # return the Value
@@ -23,7 +24,7 @@ class AppConfigParser(ConfigParser):
         else:
             return None
 
-    def add_configuration(self, config_section, config_key, config_value ):
+    def add_configuration(self, config_section, config_key, config_value):
         self.__readfile()
         if not self.has_section(config_section):
             # add Section
@@ -43,12 +44,11 @@ class Bookmarks:
     def __get_json_as_dict(self):
         """Function to get bookmarks dict from json"""
         try:
-            with open(self.file,'r') as fp:
+            with open(self.file, 'r') as fp:
                 return json.load(fp)
         except (JSONDecodeError, FileNotFoundError) as e:
             print(e)
             return {}
-
 
     def __dump_json(self, data_dict):
         with open(self.file, 'w') as fp:
@@ -87,3 +87,8 @@ class RunTimeData(object):
 
     def setdata(self, key, value):
         RunTimeData.__data[key] = value
+
+
+def format_date(str_date, frmt='%Y-%m-%d'):
+    '''Returns date as string in the desired format'''
+    return datetime.strptime(str_date, frmt).strftime(frmt)

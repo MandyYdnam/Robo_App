@@ -1382,12 +1382,12 @@ class AlmLoginForm(tk.Toplevel):
 class StatisticsForm(tk.Frame):
     """View for Stats Form"""
 
-    def __init__(self, parent, callbacks, *args, **kwargs):
+    def __init__(self, parent, callbacks, stats_type=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         # Dictonary to keep tracK of input Widgets
-
         self.inputs = {}
         self.callbacks = callbacks
+        self.stats_type = stats_type if stats_type else []
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=3)
 
@@ -1395,33 +1395,91 @@ class StatisticsForm(tk.Frame):
         # Selection Frame
         #######################
         frm_selection = tk.LabelFrame(self, text="Selection")
-        frm_selection.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)  # Display Selection  Frame
+        frm_selection.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)  # Display Selection  Frame
         frm_selection.columnconfigure(0, weight=1)
-        tk.Label(frm_selection, text='Hi').grid(row=0, column=0)
-
         self.inputs['cb_select_stats'] = w.LabelInput(frm_selection, label='',
                                                       input_class=ttk.Combobox,
                                                       input_var=tk.StringVar()
                                                       )
         self.inputs['cb_select_stats'].variable.set("Select Bookmark")
-        self.inputs['cb_select_stats'].bind("<<ComboboxSelected>>", self.__on_combobox_stats_selected)
-        self.inputs['cb_select_stats'].grid(row=0, column=0)
+        self.inputs['cb_select_stats'].set(self.stats_type)
+        self.inputs['cb_select_stats'].grid(row=0, column=0, sticky="nsew", padx=10, pady=1)
+        date_frame = ttk.Frame(frm_selection)
+        date_frame.grid(row=1, column=0, sticky="nsew")
+        date_frame.columnconfigure(0, weight=1)
+        date_frame.columnconfigure(1, weight=1)
+        self.inputs['tb_from_date'] = w.LabelInput(date_frame, label='From Date(yyyy-mm-dd):',
+                                                   input_class=w.ValidDateEntry,
+                                                   input_var=tk.StringVar())
+        self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
+
+        self.inputs['tb_to_date'] = w.LabelInput(date_frame, label='To Date(yyyy-mm-dd):',
+                                                   input_class=w.ValidDateEntry,
+                                                   input_var=tk.StringVar())
+        self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
+
+        self.inputs['btn_generate_report'] = w.LabelInput(date_frame, label='Generate Report',
+                                                   input_class=ttk.Button,
+                                                   input_var=tk.StringVar(),
+                                                   input_arg={'command': self.callbacks['generate_report']})
+        self.inputs['btn_generate_report'].grid(row=2, column=0, sticky="nsew", padx=10, pady=1)
+
+        self.inputs['btn_download_report'] = w.LabelInput(date_frame, label='Download Report',
+                                                          input_class=ttk.Button,
+                                                          input_var=tk.StringVar(),
+                                                          input_arg={'command': self.callbacks['download_report']})
+        self.inputs['btn_download_report'].grid(row=2, column=1, sticky="nsew", padx=10, pady=1)
+
+        ########################
+        # Stats Frame
+        #######################
+        self.frm_stats = tk.LabelFrame(self, text="Statistics")
+        self.frm_stats.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)  # Display Stats  Frame
+        self.frm_stats.columnconfigure(0, weight=1)
 
         ########################
         # Graph Frame
         #######################
-        frm_graph = tk.LabelFrame(self, text="Graph")
-        frm_graph.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)  # Display Graph  Frame
-        frm_graph.columnconfigure(0, weight=1)
-        tk.Label(frm_graph, text='Hi').grid(row=0, column=0)
+        self.frm_graph_frame = tk.LabelFrame(self.frm_stats, text="Graph")
+        self.frm_graph_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)  # Display Graph  Frame
+        self.frm_graph_frame.columnconfigure(0, weight=1)
+
 
         ########################
         # Details Frame
         #######################
-        frm_details = tk.LabelFrame(self, text="Details")
-        frm_details.grid(row=2, column=0, sticky="nsew", padx=10, pady=10, columnspan=2)  # Display Details  Frame
-        frm_details.columnconfigure(0, weight=1)
-        tk.Label(frm_details, text='Hi').grid(row=0, column=0)
+        self.frm_details_grid = tk.LabelFrame(self, text="Details")
+        self.frm_details_grid.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)  # Display Details  Frame
+        self.frm_details_grid.columnconfigure(1, weight=1)
+        self.frm_details_grid.rowconfigure(0, weight=1)
 
-    def __on_combobox_stats_selected(self):
-        pass
+
+    def populate_report_table(self, data_records):
+        """Function to populate report table"""
+        if self.inputs.get('trv_report_table', None) is not None:
+            self.inputs['trv_report_table'].destroy()
+        self.inputs['trv_report_table'] = w.TabularTreeView(self.frm_details_grid,
+                                                            columnNames=tuple(data_records[0].keys()))
+        for data in data_records:
+            self.inputs['trv_report_table'].insert_item(data, values=list(dict(data).values()))
+
+        self.inputs['trv_report_table'].grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=5)
+
+    def populate_statistics_data(self, data_records):
+        """Function to populate stats data"""
+        if self.inputs.get('trv_stats_table', None) is not None:
+            self.inputs['trv_stats_table'].destroy()
+        self.inputs['trv_stats_table'] = w.TabularTreeView(self.frm_stats,
+                                                            columnNames=tuple(data_records.keys()))
+        self.inputs['trv_stats_table'].insert_item(data_records, values=list(data_records.values()))
+        self.inputs['trv_stats_table'].grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=5)
+
+    # Get the data for the all the Widgets
+    def get(self):
+        data = {}
+        for key, widget in self.inputs.items():
+            if  widget is None or widget.widgetName in ('labelframe',):
+                pass
+            else:
+                data[key] = widget.get()
+        return data
