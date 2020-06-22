@@ -1,10 +1,12 @@
 from tkinter import ttk
 import tkinter as tk
+from tkinter import filedialog
 import os
 from decimal import Decimal, InvalidOperation
 from .constants import FieldTypes as FT
 from sys import platform
 from datetime import datetime
+import csv
 
 
 class ValidateMixin:
@@ -481,6 +483,20 @@ class TabularTreeView(tk.Frame):
 
     def grid(self, sticky=(tk.W + tk.E), **kwargs):
         super().grid(sticky=sticky, **kwargs)
+
+    def to_csv(self):
+        file_type =(("CSV Files",'*.csv'),)
+        file_name = filedialog.asksaveasfilename(confirmoverwrite=True, title='Save As...',defaultextension='.csv',
+                                                 filetypes=file_type)
+        if file_name:
+            try:
+                with open(file_name, 'w') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(self.columnNames)
+                    for child in self.tree.get_children():
+                        writer.writerow(self.tree.item(child)['values'])
+            except PermissionError as e:
+                raise e
 
 
 class ContextItemMix:

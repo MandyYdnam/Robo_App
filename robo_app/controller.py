@@ -14,7 +14,7 @@ import re
 from sys import platform
 from . import util as u
 from collections import Counter
-
+import csv
 
 class CreateBatchController:
     """The input form for the Batch Widgets"""
@@ -753,8 +753,7 @@ class StatisticsController:
 
     def __init__(self, parent, *args, **kwargs):
 
-        callbacks = {'generate_report': self.callback_generate_report,
-                     'download_report': self.callback_download_report}
+        callbacks = {'generate_report': self.callback_generate_report}
         self.stats_view = v.StatisticsForm(parent, callbacks, self.stats_type, *args, **kwargs)
         self.stats_model = m.StatisticsModel()
 
@@ -766,19 +765,32 @@ class StatisticsController:
             if len(data_records) != 0:
                 batch_data = Counter([data['Batch_ID'] for data in data_records])
                 script_status = Counter([data['Status'] for data in data_records])
-                stats = {'Total Batch': len(batch_data.keys()),
+                stats_data = {'Total Batch': len(batch_data.keys()),
                          'Total Test': sum(batch_data.values()),
                          'Total Passed': script_status[r.ScriptStatus.PASSED],
                          'Total Failed': script_status[r.ScriptStatus.FAIL],
                          'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
                          'Total Re-Run': script_status[r.ScriptStatus.RERUN],
                          'Total Running': script_status[r.ScriptStatus.RUNNING]}
-                self.stats_view.populate_statistics_data(stats)
+                self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
             else:
                 messagebox.showerror('Error', 'No Results Found. Please change the selection',
                                      parent=self.stats_view)
 
-    def callback_download_report(self):
-        pass
+    # def callback_download_report(self):
+    #     form_data = self.stats_view.get()
+    #     if form_data['cb_select_stats'] =='Test Execution':
+    #         data_records = self.stats_model.get_test_execution_data(u.format_date(form_data['tb_from_date']),
+    #                                                                 u.format_date(form_data['tb_to_date']))
+    #         if len(data_records) != 0:
+    #             with open('test_data.csv', 'w') as f:
+    #                 writer = csv.writer(f)
+    #                 writer.writerow( data_records[0].keys())
+    #                 for data in data_records:
+    #                     writer.writerow(data)
+    #
+    #         else:
+    #             messagebox.showerror('Error', 'No Results Found. Please change the selection',
+    #                                  parent=self.stats_view)
 
