@@ -24,7 +24,7 @@ class Application(tk.Tk):
         self.btn_create_batch.grid(row=0, column=0)
         self.btn_batch_monitor = tk.Button(frm_options, text="Batch Monitor", command=self._activate_batch_monitor,relief=tk.RAISED)
         self.btn_batch_monitor.grid(row=0, column=1)
-        self.btn_stats = tk.Button(frm_options, text="Stats", command=self._activate_stats,
+        self.btn_stats = tk.Button(frm_options, text="Statistics", command=self._activate_stats,
                                            relief=tk.RAISED)
         self.btn_stats.grid(row=0, column=2)
 

@@ -92,3 +92,7 @@ class RunTimeData(object):
 def format_date(str_date, frmt='%Y-%m-%d'):
     '''Returns date as string in the desired format'''
     return datetime.strptime(str_date, frmt).strftime(frmt)
+
+
+class FileNameNotFoundException(Exception):
+    pass

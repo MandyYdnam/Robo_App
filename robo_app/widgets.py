@@ -7,6 +7,7 @@ from .constants import FieldTypes as FT
 from sys import platform
 from datetime import datetime
 import csv
+from .util import FileNameNotFoundException
 
 
 class ValidateMixin:
@@ -497,6 +498,8 @@ class TabularTreeView(tk.Frame):
                         writer.writerow(self.tree.item(child)['values'])
             except PermissionError as e:
                 raise e
+        else:
+            raise FileNameNotFoundException('Empty File Name.')
 
 
 class ContextItemMix:

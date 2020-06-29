@@ -16,6 +16,7 @@ from . import util as u
 from collections import Counter
 import csv
 
+
 class CreateBatchController:
     """The input form for the Batch Widgets"""
 
@@ -34,21 +35,18 @@ class CreateBatchController:
         self.createbatch_view = v.CreateBatchForm(parent, callbacks, *args, **kwargs)
         self.batch_model = m.CreateBatchDetailsModel()
         proj_loc = self._get_project_location()
+        RunTimeData().setdata('user_proj_location', proj_loc)
         self.tags = r.get_project_tags(proj_loc)
         self.createbatch_view.populate_data(proj_loc, list(self.bookmark_dd.keys()),
                                             self.tags)
         # self.createbatch_view.grid(row=1, column=0)
 
-
     def call_back_select_folder(self, folder_selected):
         # Update Config  File
         parser = AppConfigParser(AppConfig.user_config_file)
-        # parser.readfile()
-        # if not parser.has_section(AppConfig.INI_APP_SETTING_SECTION):
-        #     parser.add_section(AppConfig.INI_APP_SETTING_SECTION)
-        # parser[AppConfig.INI_APP_SETTING_SECTION][AppConfig.INI_PROJECT_LOCATION] = folder_selected
-        # parser.writefile()
         parser.add_configuration(AppConfig.INI_APP_SETTING_SECTION, AppConfig.INI_PROJECT_LOCATION, folder_selected)
+        # Update RunTime Data
+        RunTimeData().setdata('user_proj_location', folder_selected)
         self.load_bookmarks_data()
         self.tags = r.get_project_tags(folder_selected)
         self.createbatch_view.populate_data(folder_selected, list(self.bookmark_dd.keys()),
@@ -103,8 +101,8 @@ class CreateBatchController:
 
             widget_data = self.createbatch_view.get()
             batch_data = {'test_list': self.createbatch_view.get_batch_tests(),
-                          'result_location' : widget_data['tbx_resultLocation'],
-                          'project_location' : widget_data['txb_ProjectLocation']}
+                          'result_location': widget_data['tbx_resultLocation'],
+                          'project_location': widget_data['txb_ProjectLocation']}
 
             CreateBatchDetailsController(self.createbatch_view, batch_data=batch_data)
         else:
@@ -143,8 +141,8 @@ class CreateBatchController:
             test_type = self.createbatch_view.inputs['rb_applicationTypeWeb'].variable.get()
             browser_device_list = self.createbatch_view.inputs['lstbx_device'].get_selected_values().replace("\n",
                                                                                                              ';') if \
-            self.createbatch_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
-            self.createbatch_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
+                self.createbatch_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
+                self.createbatch_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
             thread_count = self.createbatch_view.inputs['txb_batchNumberOfThreads'].variable.get()
             result_location = self.createbatch_view.inputs['tbx_resultLocation'].variable.get()
             project_location = self.createbatch_view.inputs['txb_ProjectLocation'].variable.get()
@@ -196,8 +194,6 @@ class CreateBatchController:
             messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
                                  parent=self.createbatch_view)
 
-
-
     def get_device_list(self):
         patrn = "[\dA-Za-z-]+"
         file_loc = os.path.join(self.createbatch_view.inputs['txb_ProjectLocation'].variable.get(),
@@ -235,6 +231,7 @@ class CreateBatchDetailsController:
                 device_list = [re.findall(patrn, line[line.find("==") + 2:].strip())[0] for line in device_file
                                if 'arg1' in line and '==' in line]
         return device_list
+
     # def load_gui(self):
     #     # Load Create Batch Details in UI
     #     self.populate_batch_data()
@@ -253,12 +250,13 @@ class CreateBatchDetailsController:
 
         if len(error_list) == 0:
             """Controls Batch Creation"""
-            browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace("\n",
-                                                                                                             ';') if \
+            browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace(
+                "\n",
+                ';') if \
                 self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
                 self.create_batch_details_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
 
-            self.batch_data['batch_name']= view_data['txb_batchName']
+            self.batch_data['batch_name'] = view_data['txb_batchName']
             self.batch_data['test_type'] = view_data['rb_applicationTypeWeb']
             self.batch_data['browser_device_list'] = browser_device_list
             self.batch_data['thread_count'] = view_data['txb_batchNumberOfThreads']
@@ -281,29 +279,39 @@ class CreateBatchDetailsController:
                     mc_server_url = self.create_batch_details_view.inputs['lstbx_mobile_center'].get()
                     mc_server_user = view_data['txb_mc_user_name']
                     mc_server_pass = view_data['txb_mc_user_pass']
-                    self.create_batch_details_model.cmd_insert_command_variable(batch_id, alm_test_plan_path=alm_test_plan,
-                                                                 alm_test_lab_path=alm_test_lab,
-                                                                 alm_test_set_name=alm_test_set,
-                                                                 test_lang=test_language,
-                                                                 mc_server_url=mc_server_url,
-                                                                 mc_server_user_name=mc_server_user,
-                                                                 mc_server_user_pass=mc_server_pass,
-                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
-                                                                 alm_user=RunTimeData().getdata('alm_user'),
-                                                                 alm_pass=RunTimeData().getdata('alm_password'),
-                                                                 alm_domain=RunTimeData().getdata('alm_domain'),
-                                                                 alm_proj=RunTimeData().getdata('alm_project'))
+                    self.create_batch_details_model.cmd_insert_command_variable(batch_id,
+                                                                                alm_test_plan_path=alm_test_plan,
+                                                                                alm_test_lab_path=alm_test_lab,
+                                                                                alm_test_set_name=alm_test_set,
+                                                                                test_lang=test_language,
+                                                                                mc_server_url=mc_server_url,
+                                                                                mc_server_user_name=mc_server_user,
+                                                                                mc_server_user_pass=mc_server_pass,
+                                                                                alm_url=AppConfig.ALM_URI + "/qcbin",
+                                                                                alm_user=RunTimeData().getdata(
+                                                                                    'alm_user'),
+                                                                                alm_pass=RunTimeData().getdata(
+                                                                                    'alm_password'),
+                                                                                alm_domain=RunTimeData().getdata(
+                                                                                    'alm_domain'),
+                                                                                alm_proj=RunTimeData().getdata(
+                                                                                    'alm_project'))
                 else:
-                    self.create_batch_details_model.cmd_insert_command_variable(batch_id, alm_test_plan_path=alm_test_plan,
-                                                                 alm_test_lab_path=alm_test_lab,
-                                                                 alm_test_set_name=alm_test_set,
-                                                                 test_lang=test_language,
-                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
-                                                                 alm_user=RunTimeData().getdata('alm_user'),
-                                                                 alm_pass=RunTimeData().getdata('alm_password'),
-                                                                 alm_domain=RunTimeData().getdata('alm_domain'),
-                                                                 alm_proj=RunTimeData().getdata('alm_project'),
-                                                                 env_url=env_url)
+                    self.create_batch_details_model.cmd_insert_command_variable(batch_id,
+                                                                                alm_test_plan_path=alm_test_plan,
+                                                                                alm_test_lab_path=alm_test_lab,
+                                                                                alm_test_set_name=alm_test_set,
+                                                                                test_lang=test_language,
+                                                                                alm_url=AppConfig.ALM_URI + "/qcbin",
+                                                                                alm_user=RunTimeData().getdata(
+                                                                                    'alm_user'),
+                                                                                alm_pass=RunTimeData().getdata(
+                                                                                    'alm_password'),
+                                                                                alm_domain=RunTimeData().getdata(
+                                                                                    'alm_domain'),
+                                                                                alm_proj=RunTimeData().getdata(
+                                                                                    'alm_project'),
+                                                                                env_url=env_url)
                 messagebox.showinfo('Batch Create', "Batch has been created with Batch ID:{}".format(batch_id),
                                     parent=self.create_batch_details_view)
             else:
@@ -327,7 +335,7 @@ class BatchMonitorController:
                      'Update Details': self.callback_tree_update,
                      'btn_refresh': self.populate_batch_data,
                      'on_double_click': self.callback_tree_on_double_click,
-                     'Clone Batch':self.callback_clone_batch}
+                     'Clone Batch': self.callback_clone_batch}
 
         self.batch_monitor_view = v.BatchMonitor(parent, callbacks, *args, **kwargs)
 
@@ -379,11 +387,11 @@ class BatchMonitorController:
         # self.batch_monitor_model.rerun_batch(row.Batch_ID)
 
         if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
-                                                                                            None).remaining_task() == 0:
+                                                                                               None).remaining_task() == 0:
             batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
             test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'], re_run_scripts=True)
             self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
-                                                                   processes=batch_details['ThreadCount'])
+                                                                      processes=batch_details['ThreadCount'])
 
             self.execution_threads[row['Batch_ID']].run_command()
         else:
@@ -404,11 +412,11 @@ class BatchMonitorController:
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
 
         if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
-                                                                                            None).remaining_task() == 0:
+                                                                                               None).remaining_task() == 0:
             batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
             test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'])
             self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
-                                                                   processes=batch_details['ThreadCount'])
+                                                                      processes=batch_details['ThreadCount'])
 
             self.execution_threads[row['Batch_ID']].run_command()
 
@@ -449,8 +457,10 @@ class BatchExecutionMonitorController:
     def _load_batch_information(self):
         batch_data = self.batch_exec_monitor_model.get_batch_details(self.batch_id)
 
-        passed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Passed")['ScriptCount']
-        failed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Failed")['ScriptCount']
+        passed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Passed")[
+            'ScriptCount']
+        failed_scripts = self.batch_exec_monitor_model.get_script_count_by_status(self.batch_id, "Failed")[
+            'ScriptCount']
 
         self.batch_exec_monitor_view.load_batch_information(batch_data['Batch_Name'],
                                                             batch_data['CreationDate'],
@@ -485,7 +495,7 @@ class BatchExecutionMonitorController:
                 log_path = row['Log_path']
             webbrowser.open(log_path)
         else:
-                messagebox.showinfo("Log Not Found", "Log file not found.")
+            messagebox.showinfo("Log Not Found", "Log file not found.")
 
     def callback_tree_open_on_double_click(self):
         row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].get_selected_items()[0]
@@ -497,7 +507,7 @@ class BatchExecutionMonitorController:
                 log_path = row['Log_path']
             webbrowser.open(log_path)
         else:
-                messagebox.showinfo("Log Not Found", "Log file not found.")
+            messagebox.showinfo("Log Not Found", "Log file not found.")
 
     def callback_tree_re_run(self):
         if self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection != "":
@@ -566,7 +576,7 @@ class BatchUpdateController:
                                                                                      env_url=data['lstbx_url_center'])
 
                 bol_script_update = self.batch_update_model.cmd_update_tests(self.batch_id,
-                                                                               device_browser_list.split(';'))
+                                                                             device_browser_list.split(';'))
                 self.batch_update_view.destroy()
                 if bol_batch_update and bol_var_update and bol_script_update:
                     messagebox.showinfo("Sucess!!", "Batch has been updated")
@@ -749,7 +759,7 @@ class ALMLoginController:
 
 class StatisticsController:
     """The input form for the Batch Widgets"""
-    stats_type = ['Test Execution', 'Test Added', 'Project Statistics']
+    stats_type = ['Test Execution', 'Test Created', 'Project Statistics']
 
     def __init__(self, parent, *args, **kwargs):
 
@@ -759,38 +769,29 @@ class StatisticsController:
 
     def callback_generate_report(self):
         form_data = self.stats_view.get()
-        if form_data['cb_select_stats'] =='Test Execution':
+        if form_data['cb_select_stats'] == 'Test Execution':
             data_records = self.stats_model.get_test_execution_data(u.format_date(form_data['tb_from_date']),
                                                                     u.format_date(form_data['tb_to_date']))
             if len(data_records) != 0:
                 batch_data = Counter([data['Batch_ID'] for data in data_records])
                 script_status = Counter([data['Status'] for data in data_records])
                 stats_data = {'Total Batch': len(batch_data.keys()),
-                         'Total Test': sum(batch_data.values()),
-                         'Total Passed': script_status[r.ScriptStatus.PASSED],
-                         'Total Failed': script_status[r.ScriptStatus.FAIL],
-                         'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
-                         'Total Re-Run': script_status[r.ScriptStatus.RERUN],
-                         'Total Running': script_status[r.ScriptStatus.RUNNING]}
+                              'Total Test': sum(batch_data.values()),
+                              'Total Passed': script_status[r.ScriptStatus.PASSED],
+                              'Total Failed': script_status[r.ScriptStatus.FAIL],
+                              'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
+                              'Total Re-Run': script_status[r.ScriptStatus.RERUN],
+                              'Total Running': script_status[r.ScriptStatus.RUNNING]}
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
             else:
                 messagebox.showerror('Error', 'No Results Found. Please change the selection',
                                      parent=self.stats_view)
+        elif form_data['cb_select_stats'] == 'Project Statistics':
+            data_records = r.get_project_stats(RunTimeData().getdata('user_proj_location'))
+            if len(data_records) != 0:
 
-    # def callback_download_report(self):
-    #     form_data = self.stats_view.get()
-    #     if form_data['cb_select_stats'] =='Test Execution':
-    #         data_records = self.stats_model.get_test_execution_data(u.format_date(form_data['tb_from_date']),
-    #                                                                 u.format_date(form_data['tb_to_date']))
-    #         if len(data_records) != 0:
-    #             with open('test_data.csv', 'w') as f:
-    #                 writer = csv.writer(f)
-    #                 writer.writerow( data_records[0].keys())
-    #                 for data in data_records:
-    #                     writer.writerow(data)
-    #
-    #         else:
-    #             messagebox.showerror('Error', 'No Results Found. Please change the selection',
-    #                                  parent=self.stats_view)
-
+                stats_data = {'Total Test Cases': sum([data['Test Cases'] for data in data_records]),
+                              'Total Keywords': sum([data['Keywords'] for data in data_records])}
+                self.stats_view.populate_statistics_data(stats_data)
+                self.stats_view.populate_report_table(data_records=data_records)

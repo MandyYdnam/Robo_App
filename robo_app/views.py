@@ -6,10 +6,11 @@ import os
 from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter import messagebox
-import matplotlib
-matplotlib.use('TkAgg')
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from .util import FileNameNotFoundException
+# import matplotlib
+# matplotlib.use('TkAgg')
+# from matplotlib.figure import Figure
+# from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 class CreateBatchForm(tk.Frame):
     """The input form for the Batch Widgets"""
@@ -212,12 +213,6 @@ class CreateBatchForm(tk.Frame):
                                                        sfilter=['.git', '.settings', 'libspecs', '__pycache__',
                                                                 '.png'])
 
-            # parser = AppConfigParser(c.AppConfig.user_config_file)
-            # parser.readfile()
-            # if not parser.has_section(c.AppConfig.INI_APP_SETTING_SECTION):
-            #     parser.add_section(c.AppConfig.INI_APP_SETTING_SECTION)
-            # parser[c.AppConfig.INI_APP_SETTING_SECTION][c.AppConfig.INI_PROJECT_LOCATION] = folder_selected
-            # parser.writefile()
             self.callbacks['btn_projLocation'](folder_selected)
 
     def populate_scripts_table(self, test_list):
@@ -1516,7 +1511,10 @@ class StatisticsForm(tk.Frame):
             self.inputs['trv_report_table'].to_csv()
             messagebox.showinfo('Success.', 'Download Completed!!!',  parent=self)
         except PermissionError as e:
-            messagebox.showerror('PermissionError', "{}. Please close file if already opened".format( e.strerror) ,
+            messagebox.showerror('Download Error', "{}. Please close file if already opened".format( e.strerror) ,
+                                 parent=self)
+        except FileNameNotFoundException as e:
+            messagebox.showerror('Download Error', "{}".format(str(e)),
                                  parent=self)
 
     # def add_graph(self, x_axis, y_axis, title):
