@@ -156,7 +156,8 @@ class InitializeModel:
 	"ScriptName"	VARCHAR(255),
 	"Documentation"	TEXT,
 	"Source"	VARCHAR(255),
-	"Tag"	VARCHAR(255)
+	"Tag"	VARCHAR(255),
+	"CreationDate"	TEXT DEFAULT 'DEFAULT CURRENT_TIMESTAMP'
 )"""
             return self.query(sql_query, ())
         except Exception as e:
@@ -846,5 +847,15 @@ tbl_testruns.Start_Time BETWEEN ? AND ?"""
         except Exception as e:
             print(e)
             raise e
+
+    def get_test_creation_data(self, from_date, to_date):
+        """Get test execution data"""
+        try:
+            sql_query = """SELECT * FROM tbl_scripts WHERE tbl_scripts.CreationDate BETWEEN ? AND ?"""
+            return self.query(sql_query, (to_date, from_date))
+        except Exception as e:
+            print(e)
+            raise e
+
 
 

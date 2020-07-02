@@ -785,7 +785,7 @@ class StatisticsController:
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
             else:
-                messagebox.showerror('Error', 'No Results Found. Please change the selection',
+                messagebox.showerror('Error', 'No Record Found. Please change the selection',
                                      parent=self.stats_view)
         elif form_data['cb_select_stats'] == 'Project Statistics':
             data_records = r.get_project_stats(RunTimeData().getdata('user_proj_location'))
@@ -795,3 +795,13 @@ class StatisticsController:
                               'Total Keywords': sum([data['Keywords'] for data in data_records])}
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
+        elif form_data['cb_select_stats'] == 'Test Created':
+            data_records = self.stats_model.get_test_creation_data(u.format_date(form_data['tb_from_date']),
+                                                                    u.format_date(form_data['tb_to_date']))
+            if len(data_records) != 0:
+                stats_data = {'Total Scripts': len(data_records)}
+                self.stats_view.populate_statistics_data(stats_data)
+                self.stats_view.populate_report_table(data_records=data_records)
+            else:
+                messagebox.showerror('Error', 'No Record Found. Please change the selection',
+                                     parent=self.stats_view)

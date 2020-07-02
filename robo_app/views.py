@@ -113,7 +113,8 @@ class CreateBatchForm(tk.Frame):
 
         self.inputs['cb_bookMark'] = w.LabelInput(self.inputs['frm_cb_batchscripts'], label='',
                                                   input_class=ttk.Combobox,
-                                                  input_var=tk.StringVar()
+                                                  input_var=tk.StringVar(),
+                                                  input_arg={'state': "readonly"}
                                                   )
         self.inputs['cb_bookMark'].variable.set("Select Bookmark")
 
@@ -590,9 +591,12 @@ class BatchMonitor(tk.Frame):
         except PermissionError as e:
             messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
                                  parent=self)
+        except FileNameNotFoundException:
+            pass
+
 
     def on_double_click_record(self, *args):
-        self.callbacks['on_double_click']()
+            self.callbacks['on_double_click']()
 
     def populate_batch_information(self, batches):
         """Remove Existing Batches"""
@@ -732,6 +736,8 @@ class BatchExecutionMonitor(tk.Toplevel):
         except PermissionError as e:
             messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
                                  parent=self)
+        except FileNameNotFoundException as e:
+            pass
 
     def on_double_click_record(self, *args):
         self.callbacks['on_double_click']()
@@ -1425,7 +1431,8 @@ class StatisticsForm(tk.Frame):
         frm_selection.columnconfigure(0, weight=1)
         self.inputs['cb_select_stats'] = w.LabelInput(frm_selection, label='',
                                                       input_class=ttk.Combobox,
-                                                      input_var=tk.StringVar()
+                                                      input_var=tk.StringVar(),
+                                                      input_arg={'state': "readonly"}
                                                       )
         self.inputs['cb_select_stats'].variable.set("Select Bookmark")
         self.inputs['cb_select_stats'].set(self.stats_type)
@@ -1514,8 +1521,7 @@ class StatisticsForm(tk.Frame):
             messagebox.showerror('Download Error', "{}. Please close file if already opened".format( e.strerror) ,
                                  parent=self)
         except FileNameNotFoundException as e:
-            messagebox.showerror('Download Error', "{}".format(str(e)),
-                                 parent=self)
+            pass
 
     # def add_graph(self, x_axis, y_axis, title):
     #     self.figure = Figure(figsize=(6, 4), dpi=100)
