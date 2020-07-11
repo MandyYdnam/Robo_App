@@ -64,20 +64,6 @@ def get_robot_test_list(suite, test_list=None):
     return _get_robot_test_list(suite, test_list)
 
 
-# def get_robot_test_list2(suite, test_tags=None, test_list=None):
-#     """Return Test as Dict"""
-#     tags = list(test_tags) or []
-#     suite = TestData(source=suite)
-#     test_list = _get_robot_test_list(suite, test_list)
-#     if not tags or tags == ['']:
-#         return sorted(
-#             [{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
-#              test_list], key=itemgetter('name'))
-#     else:
-#         return sorted(
-#             [{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
-#              test_list if set(tags).issubset(set(test.tags))], key=itemgetter('name'))
-
 def get_robot_test_list2(suite, test_tags=None, test_list=None):
     """Return Test as Dict"""
     tags = list(test_tags) or []
@@ -156,9 +142,10 @@ def _get_tags(suite):
 class ScriptStatus():
     NOT_RUN = "Not Run"
     RUNNING = "Running"
-    RERUN = "Re-Run"
+    RERUN = "Re Run"
     PASSED = "Passed"
     FAIL = "Failed"
+    STOPPED = 'Stopped'
 
 
 class TestRunnerAgent:

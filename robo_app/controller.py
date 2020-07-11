@@ -14,7 +14,7 @@ import re
 from sys import platform
 from . import util as u
 from collections import Counter
-import csv
+from numpy import add as num_py_add
 
 
 class CreateBatchController:
@@ -781,9 +781,39 @@ class StatisticsController:
                               'Total Failed': script_status[r.ScriptStatus.FAIL],
                               'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
                               'Total Re-Run': script_status[r.ScriptStatus.RERUN],
-                              'Total Running': script_status[r.ScriptStatus.RUNNING]}
+                              'Total Running': script_status[r.ScriptStatus.RUNNING],
+                              'Total Stopped': script_status[r.ScriptStatus.STOPPED]}
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
+
+                """Adding bar graph"""
+                self.stats_view.add_graph('Batches', 'Test Cases', 'Test Execution')
+                batches = list(batch_data.keys())
+                passed=[]
+                failed=[]
+                not_run=[]
+                re_run=[]
+
+                for batch in batches:
+                    passed.append(len([data for data in data_records if
+                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.PASSED]))
+                    failed.append(len([data for data in data_records if
+                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.FAIL]))
+                    not_run.append(len([data for data in data_records if
+                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.NOT_RUN]))
+                    re_run.append(len([data for data in data_records if
+                         data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.RERUN]))
+
+                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': passed, 'width': .23, 'label': 'Passed'})
+                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': failed, 'width': .23, 'label': 'Failed',
+                                                    'bottom': passed})
+                total_bottom = num_py_add(passed, failed)
+                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': not_run, 'width': .23, 'label': 'Not Run',
+                                                    'bottom': total_bottom})
+                total_bottom = num_py_add(total_bottom, not_run)
+                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': re_run, 'width': .23, 'label': 'Re Run',
+                                                    'bottom': total_bottom})
+
             else:
                 messagebox.showerror('Error', 'No Record Found. Please change the selection',
                                      parent=self.stats_view)

@@ -8,6 +8,7 @@ from .util import Bookmarks
 import sqlite3 as sq
 import logging
 from .util import RunTimeData
+from .robot_util import ScriptStatus
 
 
 
@@ -357,8 +358,9 @@ class BatchMonitorModel:
 
     def stop_batch(self, batch_id):
         try:
-            sql_query = "Update tbl_testruns SET Status ='Stopped' WHERE batch_id=? AND Status IN ('No Run','Re Run','Running')"
-            return self.query(sql_query, (batch_id,))
+            sql_query = "Update tbl_testruns SET Status =? WHERE batch_id=? AND Status IN (?,?,?)"
+            return self.query(sql_query, (ScriptStatus.STOPPED, batch_id, ScriptStatus.NOT_RUN, ScriptStatus.RERUN,
+                                          ScriptStatus.RUNNING))
         except Exception as e:
             print(e)
             raise e
@@ -366,8 +368,8 @@ class BatchMonitorModel:
     def rerun_batch(self, batch_id):
 
         try:
-            sql_query = "Update tbl_testruns SET Status ='Re Run' WHERE batch_id=?"
-            return self.query(sql_query, (batch_id,))
+            sql_query = "Update tbl_testruns SET Status =? WHERE batch_id=?"
+            return self.query(sql_query, (ScriptStatus.RERUN, batch_id))
         except Exception as e:
             print(e)
             raise e
@@ -444,9 +446,8 @@ tbl_batch.Batch_ID=tbl_command_variables.Batch_ID
 AND 
 tbl_testruns.Script_ID=tbl_scripts.Script_ID 
 AND 
-tbl_testruns.Status NOT IN ('Passed', 'Failed','Stopped') 
-AND tbl_batch.Batch_ID={}""".format(
-                    batch_id)
+tbl_testruns.Status NOT IN ({},{},{}) 
+AND tbl_batch.Batch_ID={}""".format(ScriptStatus.PASSED, ScriptStatus.FAIL, ScriptStatus.STOPPED, batch_id)
 
             return self.query(sql_query, ())
         except Exception as e:
@@ -464,7 +465,7 @@ AND tbl_batch.Batch_ID={}""".format(
 
     def get_batch_details(self, batch_id):
         try:
-            sql_query = "Select* from tbl_batch WHERE  tbl_batch.Batch_ID={}".format(batch_id)
+            sql_query = "Select* from tbl_batch WHERE tbl_batch.Batch_ID={}".format(batch_id)
 
             return self.query(sql_query, ())
         except Exception as e:
@@ -521,7 +522,7 @@ tbl_testruns.Batch_ID=?"""
         except:
             return False
 
-    def get_script_count_by_status(self, batch_id, status='Passed'):
+    def get_script_count_by_status(self, batch_id, status=ScriptStatus.PASSED):
         """Get batch Data by batch ID"""
         try:
 
@@ -557,10 +558,10 @@ tbl_testruns.Batch_ID=?"""
     def stop_script(self, run_id):
         """Stops the Script based on ID"""
         try:
-
-            sql_query = "Update tbl_testruns SET Status ='Stopped' WHERE RUN_ID=? AND Status IN ('No Run','Re Run','Running')"
-
-            return self.query(sql_query, (run_id,))
+            sql_query = "Update tbl_testruns SET Status =? WHERE RUN_ID=? AND Status IN (?,?,?)"
+            return self.query(sql_query, (ScriptStatus.STOPPED, run_id, ScriptStatus.NOT_RUN,
+                                          ScriptStatus.RERUN,
+                                          ScriptStatus.RUNNING))
 
         except Exception as e:
             return e
@@ -568,10 +569,8 @@ tbl_testruns.Batch_ID=?"""
     def rerun_script(self, run_id):
         """Stops the Script based on ID"""
         try:
-
-            sql_query = "Update tbl_testruns SET Status ='Re Run'  WHERE RUN_ID=?"
-
-            return self.query(sql_query, (run_id,))
+            sql_query = "Update tbl_testruns SET Status ='?'  WHERE RUN_ID=?"
+            return self.query(sql_query, (ScriptStatus.RERUN, run_id))
         except Exception as e:
             print(e)
 

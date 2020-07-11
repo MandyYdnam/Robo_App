@@ -15,6 +15,7 @@ class Application(tk.Tk):
         self.create_batch = None
         self.stats = None
         # self.resizable(width=False, height=False)
+        self.state('zoomed')
         # self.geometry("+%d+%d" % (100, 50))
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)

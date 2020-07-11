@@ -7,10 +7,10 @@ from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter import messagebox
 from .util import FileNameNotFoundException
-# import matplotlib
+import matplotlib
 # matplotlib.use('TkAgg')
-# from matplotlib.figure import Figure
-# from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 class CreateBatchForm(tk.Frame):
     """The input form for the Batch Widgets"""
@@ -1470,12 +1470,13 @@ class StatisticsForm(tk.Frame):
         #######################
         self.frm_stats = tk.LabelFrame(self, text="Statistics")
         self.frm_stats.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)  # Display Stats  Frame
-        # self.frm_stats.columnconfigure(0, weight=1)
+        self.frm_stats.columnconfigure(0, weight=1)
+        self.frm_stats.columnconfigure(1, weight=1)
 
         ########################
         # Graph Frame
         #######################
-        self.frm_graph_frame = tk.LabelFrame(self.frm_stats, text="Graph")
+        self.frm_graph_frame = tk.Frame(self.frm_stats)
         self.frm_graph_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)  # Display Graph  Frame
         self.frm_graph_frame.columnconfigure(0, weight=1)
 
@@ -1523,25 +1524,33 @@ class StatisticsForm(tk.Frame):
         except FileNameNotFoundException as e:
             pass
 
-    # def add_graph(self, x_axis, y_axis, title):
-    #     self.figure = Figure(figsize=(6, 4), dpi=100)
-    #     self.axes = self.figure.add_subplot(111)
-    #     self.axes.set_xlabel(x_axis)
-    #     self.axes.set_ylabel(y_axis)
-    #     self.axes.set_title(title)
-    #     self.canvas = FigureCanvasTkAgg(self.figure, master=self)
-    #     self.toolbar = NavigationToolbar2Tk(self.canvas, self)
-    #
-    # def add_bar_to_chart(self, **kwargs):
-    #     self.axes.bar(**kwargs)
-    #     self.axes.legend()
-    #     self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    def add_graph(self, x_axis, y_axis, title):
+        if getattr(self, 'figure', None) is not None:
+            self.axes.clear()
+            self.canvas.draw()
+        else:
+            self.figure = Figure(figsize=(6, 4), dpi=100)
+            self.axes = self.figure.add_subplot(111)
+        self.axes.set_xlabel(x_axis)
+        self.axes.set_ylabel(y_axis)
+        self.axes.set_title(title)
+        if getattr(self, 'canvas', None) is None:
+            self.canvas = FigureCanvasTkAgg(self.figure, master=self.frm_graph_frame)
+            self.toolbar = NavigationToolbar2Tk(self.canvas, self.frm_graph_frame)
+
+    def add_bar_to_chart(self, **kwargs):
+        self.axes.bar(**kwargs)
+        self.axes.legend()
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+
 
     # Get the data for the all the Widgets
     def get(self):
         data = {}
         for key, widget in self.inputs.items():
-            if  widget is None or widget.widgetName in ('labelframe',):
+            if widget is None or widget.widgetName in ('labelframe',):
                 pass
             else:
                 data[key] = widget.get()
