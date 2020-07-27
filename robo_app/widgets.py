@@ -9,6 +9,10 @@ from datetime import datetime
 import csv
 from .util import FileNameNotFoundException
 
+import matplotlib
+# matplotlib.use('TkAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 class ValidateMixin:
     """Add a validation functionality to a widget"""
@@ -559,3 +563,28 @@ class ScriptTabularTreeView(ContextItemMix, TabularTreeView):
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
             self.cMenu.grab_release()
+
+
+class BarGraph(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.figure = Figure(figsize=(6, 4), dpi=100)
+        self.axes = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=parent)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, parent)
+        self.toolbar.pack_forget()
+
+    def set_axis_label(self, x_axis, y_axis, title):
+        self.axes.set_xlabel(x_axis)
+        self.axes.set_ylabel(y_axis)
+        self.axes.set_title(title)
+
+    def add_bar(self, **kwargs):
+        self.axes.bar(**kwargs)
+        self.axes.legend()
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.toolbar.pack()
+
+
+

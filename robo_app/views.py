@@ -12,6 +12,7 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
+
 class CreateBatchForm(tk.Frame):
     """The input form for the Batch Widgets"""
 
@@ -579,24 +580,23 @@ class BatchMonitor(tk.Frame):
                                                   , input_arg={'command': self.callbacks['btn_refresh']})
         self.inputs['btn_refresh'].grid(row=0, column=1)
         self.inputs['btn_download'] = w.LabelInput(frame_batch_buttons, "Download"
-                                                  , input_class=ttk.Button
-                                                  , input_var=tk.StringVar()
-                                                  , input_arg={'command': self.download_detail_report})
+                                                   , input_class=ttk.Button
+                                                   , input_var=tk.StringVar()
+                                                   , input_arg={'command': self.download_detail_report})
         self.inputs['btn_download'].grid(row=0, column=2)
 
     def download_detail_report(self):
         try:
             self.inputs['trv_batches'].to_csv()
-            messagebox.showinfo('Success.', 'Download Completed!!!',  parent=self)
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
         except PermissionError as e:
             messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
                                  parent=self)
         except FileNameNotFoundException:
             pass
 
-
     def on_double_click_record(self, *args):
-            self.callbacks['on_double_click']()
+        self.callbacks['on_double_click']()
 
     def populate_batch_information(self, batches):
         """Remove Existing Batches"""
@@ -724,15 +724,15 @@ class BatchExecutionMonitor(tk.Toplevel):
                                                   , input_arg={'command': self.callbacks['Refresh']})
         self.inputs['btn_refresh'].grid(row=0, column=0)
         self.inputs['btn_download_to_csc'] = w.LabelInput(frame_btns_batch_execution_details, "Download"
-                                                  , input_class=ttk.Button
-                                                  , input_var=tk.StringVar()
-                                                  , input_arg={'command': self.download_detail_report})
+                                                          , input_class=ttk.Button
+                                                          , input_var=tk.StringVar()
+                                                          , input_arg={'command': self.download_detail_report})
         self.inputs['btn_download_to_csc'].grid(row=0, column=1)
 
     def download_detail_report(self):
         try:
             self.inputs['trv_batchScripts'].to_csv()
-            messagebox.showinfo('Success.', 'Download Completed!!!',  parent=self)
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
         except PermissionError as e:
             messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
                                  parent=self)
@@ -1447,21 +1447,21 @@ class StatisticsForm(tk.Frame):
         self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
 
         self.inputs['tb_to_date'] = w.LabelInput(date_frame, label='To Date(yyyy-mm-dd):',
-                                                   input_class=w.ValidDateEntry,
-                                                   input_var=tk.StringVar())
+                                                 input_class=w.ValidDateEntry,
+                                                 input_var=tk.StringVar())
         self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
 
         self.inputs['btn_generate_report'] = w.LabelInput(date_frame, label='Generate Report',
-                                                   input_class=ttk.Button,
-                                                   input_var=tk.StringVar(),
-                                                   input_arg={'command': self.callbacks['generate_report']})
+                                                          input_class=ttk.Button,
+                                                          input_var=tk.StringVar(),
+                                                          input_arg={'command': self.callbacks['generate_report']})
         self.inputs['btn_generate_report'].grid(row=2, column=0, sticky="nsew", padx=10, pady=3)
 
         self.inputs['btn_download_report'] = w.LabelInput(date_frame, label='Download Report',
                                                           input_class=ttk.Button,
                                                           input_var=tk.StringVar(),
                                                           input_arg={'command': self.download_detail_report})
-                                                          # input_arg={'command': self.callbacks['download_report']})
+        # input_arg={'command': self.callbacks['download_report']})
 
         self.inputs['btn_download_report'].grid(row=2, column=1, sticky="nsew", padx=10, pady=3)
 
@@ -1479,7 +1479,7 @@ class StatisticsForm(tk.Frame):
         self.frm_graph_frame = tk.Frame(self.frm_stats)
         self.frm_graph_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)  # Display Graph  Frame
         self.frm_graph_frame.columnconfigure(0, weight=1)
-
+        self.bar_graph = w.BarGraph(self.frm_graph_frame)
 
         ########################
         # Details Frame
@@ -1505,7 +1505,7 @@ class StatisticsForm(tk.Frame):
         if self.inputs.get('trv_stats_table', None) is not None:
             self.inputs['trv_stats_table'].destroy()
         self.inputs['trv_stats_table'] = w.TabularTreeView(self.frm_stats,
-                                                            columnNames=('Type','#'))
+                                                           columnNames=('Type', '#'))
         for key, value in data_records.items():
             self.inputs['trv_stats_table'].insert_item(data_records, values=[key, value])
         self.inputs['trv_stats_table'].grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=5)
@@ -1517,33 +1517,20 @@ class StatisticsForm(tk.Frame):
             return
         try:
             self.inputs['trv_report_table'].to_csv()
-            messagebox.showinfo('Success.', 'Download Completed!!!',  parent=self)
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
         except PermissionError as e:
-            messagebox.showerror('Download Error', "{}. Please close file if already opened".format( e.strerror) ,
+            messagebox.showerror('Download Error', "{}. Please close file if already opened".format(e.strerror),
                                  parent=self)
         except FileNameNotFoundException as e:
             pass
 
-    def add_graph(self, x_axis, y_axis, title):
-        if getattr(self, 'figure', None) is not None:
-            self.axes.clear()
-            self.canvas.draw()
-        else:
-            self.figure = Figure(figsize=(6, 4), dpi=100)
-            self.axes = self.figure.add_subplot(111)
-        self.axes.set_xlabel(x_axis)
-        self.axes.set_ylabel(y_axis)
-        self.axes.set_title(title)
-        if getattr(self, 'canvas', None) is None:
-            self.canvas = FigureCanvasTkAgg(self.figure, master=self.frm_graph_frame)
-            self.toolbar = NavigationToolbar2Tk(self.canvas, self.frm_graph_frame)
-
-    def add_bar_to_chart(self, **kwargs):
-        self.axes.bar(**kwargs)
-        self.axes.legend()
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
+    def add_bar_to_chart(self, title, x_label, y_label, bar_graph_data):
+        # Initial Cleanup
+        self.bar_graph.axes.clear()
+        self.bar_graph.canvas.draw()
+        self.bar_graph.set_axis_label(x_label, y_label, title)
+        for bar in bar_graph_data:
+            self.bar_graph.add_bar(**bar)
 
 
     # Get the data for the all the Widgets

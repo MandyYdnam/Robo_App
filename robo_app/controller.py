@@ -787,51 +787,64 @@ class StatisticsController:
                 self.stats_view.populate_report_table(data_records=data_records)
 
                 """Adding bar graph"""
-                self.stats_view.add_graph('Batches', 'Test Cases', 'Test Execution')
+
                 batches = list(batch_data.keys())
-                passed=[]
-                failed=[]
-                not_run=[]
-                re_run=[]
+                passed = []
+                failed = []
+                not_run = []
+                re_run = []
 
                 for batch in batches:
                     passed.append(len([data for data in data_records if
-                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.PASSED]))
+                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.PASSED]))
                     failed.append(len([data for data in data_records if
-                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.FAIL]))
+                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.FAIL]))
                     not_run.append(len([data for data in data_records if
-                                  data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.NOT_RUN]))
+                                        data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.NOT_RUN]))
                     re_run.append(len([data for data in data_records if
-                         data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.RERUN]))
+                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.RERUN]))
 
-                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': passed, 'width': .23, 'label': 'Passed'})
-                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': failed, 'width': .23, 'label': 'Failed',
-                                                    'bottom': passed})
+                bar_data = [{'x': batches, 'height': passed, 'width': .23, 'label': 'Passed'},
+                            {'x': batches, 'height': failed, 'width': .23, 'label': 'Failed',
+                             'bottom': passed}
+                            ]
                 total_bottom = num_py_add(passed, failed)
-                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': not_run, 'width': .23, 'label': 'Not Run',
-                                                    'bottom': total_bottom})
+                bar_data.append({'x': batches, 'height': not_run, 'width': .23, 'label': 'Not Run',
+                                 'bottom': total_bottom})
+
                 total_bottom = num_py_add(total_bottom, not_run)
-                self.stats_view.add_bar_to_chart(**{'x': batches, 'height': re_run, 'width': .23, 'label': 'Re Run',
-                                                    'bottom': total_bottom})
+                bar_data.append({'x': batches, 'height': re_run, 'width': .23, 'label': 'Re Run',
+                                 'bottom': total_bottom})
+                self.stats_view.add_bar_to_chart('Test Execution', 'Batches', '# Test Cases',  bar_data)
 
             else:
                 messagebox.showerror('Error', 'No Record Found. Please change the selection',
                                      parent=self.stats_view)
+
         elif form_data['cb_select_stats'] == 'Project Statistics':
             data_records = r.get_project_stats(RunTimeData().getdata('user_proj_location'))
             if len(data_records) != 0:
-
                 stats_data = {'Total Test Cases': sum([data['Test Cases'] for data in data_records]),
                               'Total Keywords': sum([data['Keywords'] for data in data_records])}
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
+
+
         elif form_data['cb_select_stats'] == 'Test Created':
             data_records = self.stats_model.get_test_creation_data(u.format_date(form_data['tb_from_date']),
-                                                                    u.format_date(form_data['tb_to_date']))
+                                                                   u.format_date(form_data['tb_to_date']))
             if len(data_records) != 0:
                 stats_data = {'Total Scripts': len(data_records)}
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
+                # Bar Graph Data
+
+                script_sources = Counter([data['Source'] for data in data_records])
+                bar_data = []
+                for source, count in script_sources.items():
+                    bar_data.append({'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23,
+                                     'label': source.split(os.sep)[-1]})
+                self.stats_view.add_bar_to_chart('Test Created', 'Source', '# Test Cases', bar_data)
             else:
                 messagebox.showerror('Error', 'No Record Found. Please change the selection',
                                      parent=self.stats_view)
