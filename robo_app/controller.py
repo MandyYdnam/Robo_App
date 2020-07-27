@@ -829,7 +829,6 @@ class StatisticsController:
                 self.stats_view.populate_statistics_data(stats_data)
                 self.stats_view.populate_report_table(data_records=data_records)
 
-
         elif form_data['cb_select_stats'] == 'Test Created':
             data_records = self.stats_model.get_test_creation_data(u.format_date(form_data['tb_from_date']),
                                                                    u.format_date(form_data['tb_to_date']))
@@ -842,8 +841,7 @@ class StatisticsController:
                 script_sources = Counter([data['Source'] for data in data_records])
                 bar_data = []
                 for source, count in script_sources.items():
-                    bar_data.append({'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23,
-                                     'label': source.split(os.sep)[-1]})
+                    bar_data.append({'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23})
                 self.stats_view.add_bar_to_chart('Test Created', 'Source', '# Test Cases', bar_data)
             else:
                 messagebox.showerror('Error', 'No Record Found. Please change the selection',

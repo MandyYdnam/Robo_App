@@ -1532,7 +1532,6 @@ class StatisticsForm(tk.Frame):
         for bar in bar_graph_data:
             self.bar_graph.add_bar(**bar)
 
-
     # Get the data for the all the Widgets
     def get(self):
         data = {}

@@ -446,7 +446,7 @@ tbl_batch.Batch_ID=tbl_command_variables.Batch_ID
 AND 
 tbl_testruns.Script_ID=tbl_scripts.Script_ID 
 AND 
-tbl_testruns.Status NOT IN ({},{},{}) 
+tbl_testruns.Status NOT IN ('{}','{}','{}') 
 AND tbl_batch.Batch_ID={}""".format(ScriptStatus.PASSED, ScriptStatus.FAIL, ScriptStatus.STOPPED, batch_id)
 
             return self.query(sql_query, ())
