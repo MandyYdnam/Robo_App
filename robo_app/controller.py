@@ -16,6 +16,7 @@ from . import util as u
 from collections import Counter
 from numpy import add as num_py_add
 from datetime import datetime
+from textwrap import wrap
 
 
 class CreateBatchController:
@@ -841,13 +842,12 @@ class StatisticsController:
             self.stats_view.populate_statistics_data(stats_data)
             self.stats_view.populate_report_table(data_records=data_records)
             # Bar Graph Data
-
             script_sources = Counter([data['Source'] for data in data_records])
+            # file_names = [file.split(os.sep)[-1] for file in script_sources.keys()]
+            file_names = ['\n'.join(wrap(file.split(os.sep)[-1], 15)) for file in script_sources.keys()]
             bar_data = []
             for source, count in script_sources.items():
-                bar_data.append(
-                    {'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23,
-                     'label': source.split(os.sep)[-1]})
+                bar_data.append({'x': file_names, 'height': count, 'width': .23})
             self.stats_view.add_bar_to_chart('Test Created', 'Source', '# Test Cases', bar_data)
         else:
             messagebox.showerror('Error', 'No Record Found. Please change the selection',
@@ -862,6 +862,7 @@ class StatisticsController:
             self.stats_view.populate_report_table(data_records=data_records)
             '''Bar Data'''
             file_names = [data['File Name'] for data in data_records]
+            file_names = ['\n'.join(wrap(name, 15)) for name in file_names]
             keywords = [data['Keywords'] for data in data_records]
             test_cases = [data['Test Cases'] for data in data_records]
 
