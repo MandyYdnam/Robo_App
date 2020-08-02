@@ -1543,10 +1543,8 @@ class StatisticsForm(tk.Frame):
     def __on_combobox_selected(self, *args):
         self.callbacks['cb_on_select_stats'](self.inputs['cb_select_stats'].get())
 
-    def set_date_fields(self, from_date, to_date, read_only=False):
-        self.inputs['tb_from_date'].set(from_date)
-        self.inputs['tb_to_date'].set(to_date)
-        if read_only:
+    def set_date_fields_visibility(self, visible=True):
+        if not visible:
             self.inputs['tb_from_date'].input.configure(state='readonly')
             self.inputs['tb_to_date'].input.configure(state='readonly')
             self.inputs['tb_from_date'].grid_forget()
@@ -1554,3 +1552,5 @@ class StatisticsForm(tk.Frame):
         else:
             self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
             self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
+            self.inputs['tb_from_date'].input.configure(state='default')
+            self.inputs['tb_to_date'].input.configure(state='default')

@@ -15,7 +15,6 @@ from sys import platform
 from . import util as u
 from collections import Counter
 from numpy import add as num_py_add
-from datetime import datetime
 from textwrap import wrap
 
 
@@ -874,8 +873,6 @@ class StatisticsController:
 
     def callback_on_select_stats(self, selected_value):
         if selected_value == 'Project Statistics':
-            self.stats_view.set_date_fields(datetime.now().strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'),
-                                            True)
+            self.stats_view.set_date_fields_visibility(False)
         else:
-            self.stats_view.set_date_fields(datetime.now().strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'),
-                                            False)
+            self.stats_view.set_date_fields_visibility(True)
