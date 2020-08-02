@@ -7,10 +7,7 @@ from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter import messagebox
 from .util import FileNameNotFoundException
-import matplotlib
-# matplotlib.use('TkAgg')
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from datetime import datetime
 
 
 class CreateBatchForm(tk.Frame):
@@ -1434,8 +1431,9 @@ class StatisticsForm(tk.Frame):
                                                       input_var=tk.StringVar(),
                                                       input_arg={'state': "readonly"}
                                                       )
-        self.inputs['cb_select_stats'].variable.set("Select Bookmark")
+        self.inputs['cb_select_stats'].variable.set("Select Option")
         self.inputs['cb_select_stats'].set(self.stats_type)
+        self.inputs['cb_select_stats'].bind("<<ComboboxSelected>>", self.__on_combobox_selected)
         self.inputs['cb_select_stats'].grid(row=0, column=0, sticky="nsew", padx=10, pady=3)
         date_frame = ttk.Frame(frm_selection)
         date_frame.grid(row=1, column=0, sticky="nsew")
@@ -1445,12 +1443,12 @@ class StatisticsForm(tk.Frame):
                                                    input_class=w.ValidDateEntry,
                                                    input_var=tk.StringVar())
         self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
-
+        self.inputs['tb_from_date'].set(datetime.now().strftime('%Y-%m-%d'))
         self.inputs['tb_to_date'] = w.LabelInput(date_frame, label='To Date(yyyy-mm-dd):',
                                                  input_class=w.ValidDateEntry,
                                                  input_var=tk.StringVar())
         self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
-
+        self.inputs['tb_to_date'].set(datetime.now().strftime('%Y-%m-%d'))
         self.inputs['btn_generate_report'] = w.LabelInput(date_frame, label='Generate Report',
                                                           input_class=ttk.Button,
                                                           input_var=tk.StringVar(),
@@ -1532,7 +1530,6 @@ class StatisticsForm(tk.Frame):
         for bar in bar_graph_data:
             self.bar_graph.add_bar(**bar)
 
-
     # Get the data for the all the Widgets
     def get(self):
         data = {}
@@ -1542,3 +1539,18 @@ class StatisticsForm(tk.Frame):
             else:
                 data[key] = widget.get()
         return data
+
+    def __on_combobox_selected(self, *args):
+        self.callbacks['cb_on_select_stats'](self.inputs['cb_select_stats'].get())
+
+    def set_date_fields(self, from_date, to_date, read_only=False):
+        self.inputs['tb_from_date'].set(from_date)
+        self.inputs['tb_to_date'].set(to_date)
+        if read_only:
+            self.inputs['tb_from_date'].input.configure(state='readonly')
+            self.inputs['tb_to_date'].input.configure(state='readonly')
+            self.inputs['tb_from_date'].grid_forget()
+            self.inputs['tb_to_date'].grid_forget()
+        else:
+            self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
+            self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)

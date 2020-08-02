@@ -15,6 +15,7 @@ from sys import platform
 from . import util as u
 from collections import Counter
 from numpy import add as num_py_add
+from datetime import datetime
 
 
 class CreateBatchController:
@@ -763,88 +764,117 @@ class StatisticsController:
 
     def __init__(self, parent, *args, **kwargs):
 
-        callbacks = {'generate_report': self.callback_generate_report}
+        callbacks = {'generate_report': self.callback_generate_report,
+                     'cb_on_select_stats': self.callback_on_select_stats}
         self.stats_view = v.StatisticsForm(parent, callbacks, self.stats_type, *args, **kwargs)
         self.stats_model = m.StatisticsModel()
 
     def callback_generate_report(self):
         form_data = self.stats_view.get()
         if form_data['cb_select_stats'] == 'Test Execution':
-            data_records = self.stats_model.get_test_execution_data(u.format_date(form_data['tb_from_date']),
-                                                                    u.format_date(form_data['tb_to_date']))
-            if len(data_records) != 0:
-                batch_data = Counter([data['Batch_ID'] for data in data_records])
-                script_status = Counter([data['Status'] for data in data_records])
-                stats_data = {'Total Batch': len(batch_data.keys()),
-                              'Total Test': sum(batch_data.values()),
-                              'Total Passed': script_status[r.ScriptStatus.PASSED],
-                              'Total Failed': script_status[r.ScriptStatus.FAIL],
-                              'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
-                              'Total Re-Run': script_status[r.ScriptStatus.RERUN],
-                              'Total Running': script_status[r.ScriptStatus.RUNNING],
-                              'Total Stopped': script_status[r.ScriptStatus.STOPPED]}
-                self.stats_view.populate_statistics_data(stats_data)
-                self.stats_view.populate_report_table(data_records=data_records)
-
-                """Adding bar graph"""
-
-                batches = list(batch_data.keys())
-                passed = []
-                failed = []
-                not_run = []
-                re_run = []
-
-                for batch in batches:
-                    passed.append(len([data for data in data_records if
-                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.PASSED]))
-                    failed.append(len([data for data in data_records if
-                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.FAIL]))
-                    not_run.append(len([data for data in data_records if
-                                        data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.NOT_RUN]))
-                    re_run.append(len([data for data in data_records if
-                                       data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.RERUN]))
-
-                bar_data = [{'x': batches, 'height': passed, 'width': .23, 'label': 'Passed'},
-                            {'x': batches, 'height': failed, 'width': .23, 'label': 'Failed',
-                             'bottom': passed}
-                            ]
-                total_bottom = num_py_add(passed, failed)
-                bar_data.append({'x': batches, 'height': not_run, 'width': .23, 'label': 'Not Run',
-                                 'bottom': total_bottom})
-
-                total_bottom = num_py_add(total_bottom, not_run)
-                bar_data.append({'x': batches, 'height': re_run, 'width': .23, 'label': 'Re Run',
-                                 'bottom': total_bottom})
-                self.stats_view.add_bar_to_chart('Test Execution', 'Batches', '# Test Cases',  bar_data)
-
-            else:
-                messagebox.showerror('Error', 'No Record Found. Please change the selection',
-                                     parent=self.stats_view)
-
+            self._generate_test_execution_stats()
         elif form_data['cb_select_stats'] == 'Project Statistics':
-            data_records = r.get_project_stats(RunTimeData().getdata('user_proj_location'))
-            if len(data_records) != 0:
-                stats_data = {'Total Test Cases': sum([data['Test Cases'] for data in data_records]),
-                              'Total Keywords': sum([data['Keywords'] for data in data_records])}
-                self.stats_view.populate_statistics_data(stats_data)
-                self.stats_view.populate_report_table(data_records=data_records)
-
+            self._generate_project_stats()
 
         elif form_data['cb_select_stats'] == 'Test Created':
-            data_records = self.stats_model.get_test_creation_data(u.format_date(form_data['tb_from_date']),
-                                                                   u.format_date(form_data['tb_to_date']))
-            if len(data_records) != 0:
-                stats_data = {'Total Scripts': len(data_records)}
-                self.stats_view.populate_statistics_data(stats_data)
-                self.stats_view.populate_report_table(data_records=data_records)
-                # Bar Graph Data
+            self._generate_test_creation_stats()
 
-                script_sources = Counter([data['Source'] for data in data_records])
-                bar_data = []
-                for source, count in script_sources.items():
-                    bar_data.append({'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23,
-                                     'label': source.split(os.sep)[-1]})
-                self.stats_view.add_bar_to_chart('Test Created', 'Source', '# Test Cases', bar_data)
-            else:
-                messagebox.showerror('Error', 'No Record Found. Please change the selection',
-                                     parent=self.stats_view)
+    def _generate_test_execution_stats(self):
+        form_data = self.stats_view.get()
+        data_records = self.stats_model.get_test_execution_data(u.format_date(form_data['tb_from_date']),
+                                                                u.format_date(form_data['tb_to_date']))
+        if len(data_records) != 0:
+            batch_data = Counter([data['Batch_ID'] for data in data_records])
+            script_status = Counter([data['Status'] for data in data_records])
+            stats_data = {'Total Batch': len(batch_data.keys()),
+                          'Total Test': sum(batch_data.values()),
+                          'Total Passed': script_status[r.ScriptStatus.PASSED],
+                          'Total Failed': script_status[r.ScriptStatus.FAIL],
+                          'Total No Run': script_status[r.ScriptStatus.NOT_RUN],
+                          'Total Re-Run': script_status[r.ScriptStatus.RERUN],
+                          'Total Running': script_status[r.ScriptStatus.RUNNING],
+                          'Total Stopped': script_status[r.ScriptStatus.STOPPED]}
+            self.stats_view.populate_statistics_data(stats_data)
+            self.stats_view.populate_report_table(data_records=data_records)
+
+            """Adding bar graph"""
+
+            batches = list(batch_data.keys())
+            passed = []
+            failed = []
+            not_run = []
+            re_run = []
+
+            for batch in batches:
+                passed.append(len([data for data in data_records if
+                                   data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.PASSED]))
+                failed.append(len([data for data in data_records if
+                                   data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.FAIL]))
+                not_run.append(len([data for data in data_records if
+                                    data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.NOT_RUN]))
+                re_run.append(len([data for data in data_records if
+                                   data['Batch_ID'] == batch and data['Status'] == r.ScriptStatus.RERUN]))
+
+            bar_data = [{'x': batches, 'height': passed, 'width': .23, 'label': 'Passed'},
+                        {'x': batches, 'height': failed, 'width': .23, 'label': 'Failed',
+                         'bottom': passed}
+                        ]
+            total_bottom = num_py_add(passed, failed)
+            bar_data.append({'x': batches, 'height': not_run, 'width': .23, 'label': 'Not Run',
+                             'bottom': total_bottom})
+
+            total_bottom = num_py_add(total_bottom, not_run)
+            bar_data.append({'x': batches, 'height': re_run, 'width': .23, 'label': 'Re Run',
+                             'bottom': total_bottom})
+            self.stats_view.add_bar_to_chart('Test Execution', 'Batches', '# Test Cases', bar_data)
+
+        else:
+            messagebox.showerror('Error', 'No Record Found. Please change the selection',
+                                 parent=self.stats_view)
+
+    def _generate_test_creation_stats(self):
+        form_data = self.stats_view.get()
+        data_records = self.stats_model.get_test_creation_data(u.format_date(form_data['tb_from_date']),
+                                                               u.format_date(form_data['tb_to_date']))
+        if len(data_records) != 0:
+            stats_data = {'Total Scripts': len(data_records)}
+            self.stats_view.populate_statistics_data(stats_data)
+            self.stats_view.populate_report_table(data_records=data_records)
+            # Bar Graph Data
+
+            script_sources = Counter([data['Source'] for data in data_records])
+            bar_data = []
+            for source, count in script_sources.items():
+                bar_data.append(
+                    {'x': [file.split(os.sep)[-1] for file in script_sources.keys()], 'height': count, 'width': .23,
+                     'label': source.split(os.sep)[-1]})
+            self.stats_view.add_bar_to_chart('Test Created', 'Source', '# Test Cases', bar_data)
+        else:
+            messagebox.showerror('Error', 'No Record Found. Please change the selection',
+                                 parent=self.stats_view)
+
+    def _generate_project_stats(self):
+        data_records = r.get_project_stats(RunTimeData().getdata('user_proj_location'))
+        if len(data_records) != 0:
+            stats_data = {'Total Test Cases': sum([data['Test Cases'] for data in data_records]),
+                          'Total Keywords': sum([data['Keywords'] for data in data_records])}
+            self.stats_view.populate_statistics_data(stats_data)
+            self.stats_view.populate_report_table(data_records=data_records)
+            '''Bar Data'''
+            file_names = [data['File Name'] for data in data_records]
+            keywords = [data['Keywords'] for data in data_records]
+            test_cases = [data['Test Cases'] for data in data_records]
+
+            bar_data = [{'x': file_names, 'height': test_cases, 'width': .23, 'label': 'Test Cases'},
+                        {'x': file_names, 'height': keywords, 'width': .23, 'label': 'keywords',
+                         'bottom': test_cases}
+                        ]
+            self.stats_view.add_bar_to_chart('Project Statstics', 'File Name', 'Test Cases/ Keywords', bar_data)
+
+    def callback_on_select_stats(self, selected_value):
+        if selected_value == 'Project Statistics':
+            self.stats_view.set_date_fields(datetime.now().strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'),
+                                            True)
+        else:
+            self.stats_view.set_date_fields(datetime.now().strftime('%Y-%m-%d'), datetime.now().strftime('%Y-%m-%d'),
+                                            False)
