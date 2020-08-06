@@ -234,6 +234,36 @@ class InitializeModel:
         except Exception as e:
             raise e
 
+    def cmd_create_test_run_index(self):
+        try:
+            sql_query = """CREATE INDEX "indx_test_runs" ON "tbl_testruns" (
+	"Script_ID"	ASC,
+	"Batch_ID"	ASC,
+	"RUN_ID"	ASC,
+	"Start_Time"	ASC
+);"""
+            return self.query(sql_query, ())
+        except Exception as e:
+            raise e
+
+    def cmd_create_scripts_index(self):
+        try:
+            sql_query = """CREATE INDEX "indx_scripts" ON "tbl_scripts" (
+	"ScriptName"	ASC,
+	"Source"	ASC
+);"""
+            return self.query(sql_query, ())
+        except Exception as e:
+            raise e
+
+    def cmd_create_batch_index(self):
+        try:
+            sql_query = """CREATE INDEX "indx_batch" ON "tbl_batch" (
+	"Batch_ID"	ASC
+);"""
+            return self.query(sql_query, ())
+        except Exception as e:
+            raise e
 
 class CreateBatchDetailsModel:
 
