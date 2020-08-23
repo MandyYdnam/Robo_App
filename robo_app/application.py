@@ -13,19 +13,26 @@ class Application(tk.Tk):
         self.title("Robot Executor")
         self.batchmonitor = None
         self.create_batch = None
-        self.resizable(width=False, height=False)
-        self.geometry("+%d+%d" % (100, 50))
-        # ttk.Label(self, text="Create Batch", font=("TkDefaultFont", 16)).grid(row=0)
+        self.stats = None
+        # self.resizable(width=False, height=False)
+        self.state('zoomed')
+        # self.geometry("+%d+%d" % (100, 50))
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         frm_options = ttk.Frame(self)
         frm_options.grid(row=0, sticky=tk.W)
         self.btn_create_batch = tk.Button(frm_options, text="Create Batch", command=self._activate_create_batch, relief=tk.RAISED)
         self.btn_create_batch.grid(row=0, column=0)
         self.btn_batch_monitor = tk.Button(frm_options, text="Batch Monitor", command=self._activate_batch_monitor,relief=tk.RAISED)
         self.btn_batch_monitor.grid(row=0, column=1)
+        self.btn_stats = tk.Button(frm_options, text="Statistics", command=self._activate_stats,
+                                           relief=tk.RAISED)
+        self.btn_stats.grid(row=0, column=2)
+
         # ttk.Label(self, text="Developed By: Mandeep Dhiman",font=("TkDefaultFont", 8,'bold')).grid(row=2, column=0, sticky=tk.E)
 
         self.create_batch = c.CreateBatchController(self)
-        self.create_batch.createbatch_view.grid(row=1, column=0)
+        self.create_batch.createbatch_view.grid(row=1, column=0, sticky=tk.NSEW)
 
         if AppConfig.USE_ALM:
             self.alm_login_controller = c.ALMLoginController(self)
@@ -36,16 +43,23 @@ class Application(tk.Tk):
     def _activate_create_batch(self):
         if self.create_batch is None:
             self.create_batch = c.CreateBatchController(self)
-        if self.batchmonitor is not None:
-            self.batchmonitor.batch_monitor_view.grid_remove()
-        self.create_batch.createbatch_view.grid(row=1, column=0)
+            self.create_batch.createbatch_view.grid(row=1, column=0, sticky=tk.NSEW)
+        else:
+            self.create_batch.createbatch_view.tkraise()
 
     def _activate_batch_monitor(self):
         if self.batchmonitor is None:
             self.batchmonitor = c.BatchMonitorController(self)
+            self.batchmonitor.batch_monitor_view.grid(row=1, column=0, sticky=tk.NSEW)
         else:
-            self.batchmonitor.populate_batch_data()
-        if self.create_batch is not None:
-            self.create_batch.createbatch_view.grid_remove()
-        self.batchmonitor.batch_monitor_view.grid(row=1, column=0)
+            self.batchmonitor.batch_monitor_view.tkraise()
+
+    def _activate_stats(self):
+        if self.stats is None:
+            self.stats = c.StatisticsController(self)
+            self.stats.stats_view.grid(row=1, column=0, sticky=tk.NSEW)
+        else:
+            self.stats.stats_view.tkraise()
+
+
 

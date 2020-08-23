@@ -1,10 +1,18 @@
 from tkinter import ttk
 import tkinter as tk
+from tkinter import filedialog
 import os
 from decimal import Decimal, InvalidOperation
 from .constants import FieldTypes as FT
 from sys import platform
+from datetime import datetime
+import csv
+from .util import FileNameNotFoundException
 
+import matplotlib
+# matplotlib.use('TkAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 class ValidateMixin:
     """Add a validation functionality to a widget"""
@@ -22,7 +30,7 @@ class ValidateMixin:
         )
 
     def _toggle_error(self, on=False):
-        self.config(foreground=('ref' if on else 'black'))
+        self.config(foreground=('red' if on else 'black'))
 
     def _validate(self, proposed, current, char, event, index, action):
         self._toggle_error(False)
@@ -32,6 +40,8 @@ class ValidateMixin:
             valid = self._focusout_validation(event=event)
         elif event == 'key':
             valid = self._key_validation(proposed=proposed, current=current, char=char, index=index, action=action)
+        if not valid:
+            self._toggle_error(True)
         return valid
 
     def _focusout_validation(self, **kwargs):
@@ -66,6 +76,23 @@ class ValidEntry(ValidateMixin, ttk.Entry):
         if not self.get():
             valid = False
             self.error.set('A value is required')
+        return valid
+
+
+class ValidDateEntry(ValidateMixin, ttk.Entry):
+
+    def _focusout_validation(self, **kwargs):
+        valid = True
+        if not self.get():
+            valid = False
+            self.error.set('A value is required')
+        else:
+            input_date = self.get()
+            try:
+                datetime.strptime(input_date, '%Y-%m-%d')
+            except ValueError:
+                self.error.set('Should be in yyyy-mm-dd')
+                valid = False
         return valid
 
 
@@ -227,7 +254,7 @@ class LabelInput(tk.Frame):
         self.columnconfigure(0, weight=1)
         if input_class not in (ttk.Button,):
             self.error = getattr(self.input, 'error', tk.StringVar())
-            self.error.label = ttk.Label(self, textvariable=self.error)
+            self.error.label = ttk.Label(self, textvariable=self.error, foreground='red')
             self.error.label.grid(row=2, column=0, sticky=(tk.W + tk.E))
 
     def grid(self, sticky=(tk.W + tk.E), **kwargs):
@@ -255,7 +282,7 @@ class LabelInput(tk.Frame):
     def set(self, value, *args, **kwargs):
         if type(self.variable) == tk.BooleanVar:
             self.variable.set(bool(value))
-        elif (type(self.input) == ttk.Combobox):
+        elif type(self.input) == ttk.Combobox:
             self.input['values'] = value
         elif self.variable:
             self.variable.set(value, *args, **kwargs)
@@ -283,87 +310,6 @@ class LabelInput(tk.Frame):
     # def get_selected_values1(self,*args, **kwargs):
     #     return ";".join([ self.input.get(item) for item in self.input.curselection()])
 
-
-# class FolderTreeViewBackup(tk.Frame):
-#     def __init__(self, parent, path, sfilter=None, **kwargs):
-#         super().__init__(parent, **kwargs)
-#         self.path = os.path.abspath(path)
-#         self.entries = {"": self.path}
-#         self.sfilter = sfilter or []  # Adding the Filter
-#         # Creating the Tree
-#         self.tree = ttk.Treeview(self)
-#
-#         # x-axis and y-axis scroll bars
-#         ysb = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
-#         xsb = ttk.Scrollbar(self, orient='horizontal', command=self.tree.xview)
-#         self.tree.configure(yscroll=ysb.set, xscroll=xsb.set)
-#
-#         # Insert Root
-#         iid = self.insert("", "end", os.path.basename(self.path))
-#         self.entries[iid] = self.path
-#         # Insert the Child
-#         self.process_directory(iid, self.path)
-#
-#         # add tree and scrollbars to frame
-#         self.tree.grid(in_=self, row=0, column=0, sticky="nsew")
-#         ysb.grid(in_=self, row=0, column=1, sticky="ns")
-#         xsb.grid(in_=self, row=1, column=0, sticky="ew")
-#         self.rowconfigure(0, weight=1)
-#         self.columnconfigure(0, weight=1)
-#         self.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.Y)
-#
-#     def insert(self, parent, index, path, name="", **kwargs):
-#         """
-#         add new element to TreeView
-#         """
-#         if "text" in kwargs:
-#             err = "arg 'text' not available"
-#             raise ValueError(err)
-#         kwargs["text"] = path
-#         if name:
-#             kwargs["text"] = name
-#         iid = self.tree.insert(parent, index, **kwargs)
-#         self.entries[iid] = path
-#         return iid
-#
-#     def process_directory(self, parent, path, depth=5):
-#         if depth == 0:
-#             return
-#         for p in os.listdir(path):
-#             abspath = os.path.join(path, p)
-#             if os.path.isdir(abspath) and p not in self.sfilter:
-#                 iid = self.insert(parent,
-#                                   'end',
-#                                   path=abspath,
-#                                   name=p,
-#                                   open=False)
-#                 self.process_directory(iid, abspath, depth-1)
-#             elif os.path.isfile(abspath) and '.robot' in p:
-#                 self.insert(parent,
-#                             'end',
-#                             path=abspath,
-#                             name=p,
-#                             open=False)
-#
-#     def update_tree(self, path, sfilter=None, **kwargs):
-#         self.path = os.path.abspath(path)
-#         self.entries = {"": self.path}
-#
-#         self._remove_items()    # Remove Tree Items
-#         self.sfilter = sfilter or []  # Adding the Filter
-#         # Insert Root
-#         iid = self.insert("", "end", os.path.basename(self.path))
-#         self.entries[iid] = self.path
-#         # Insert the Child
-#         self.process_directory(iid, self.path)
-#     def _remove_items(self):
-#         items = self.tree.get_children()
-#         for item in items:
-#             self.tree.delete(item)
-#     def get_selected_item_path(self):
-#         iid= self.tree.focus()
-#         print(self.entries[iid])
-#         return self.entries[iid]
 
 class FolderTreeView(tk.Frame):
     def __init__(self, parent, path=None, sfilter=None, **kwargs):
@@ -540,6 +486,25 @@ class TabularTreeView(tk.Frame):
             self.tree.delete(child)
         self.entries = {"": ""}
 
+    def grid(self, sticky=(tk.W + tk.E), **kwargs):
+        super().grid(sticky=sticky, **kwargs)
+
+    def to_csv(self):
+        file_type =(("CSV Files",'*.csv'),)
+        file_name = filedialog.asksaveasfilename(confirmoverwrite=True, title='Save As...',defaultextension='.csv',
+                                                 filetypes=file_type)
+        if file_name:
+            try:
+                with open(file_name, 'w') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(self.columnNames)
+                    for child in self.tree.get_children():
+                        writer.writerow(self.tree.item(child)['values'])
+            except PermissionError as e:
+                raise e
+        else:
+            raise FileNameNotFoundException('Empty File Name.')
+
 
 class ContextItemMix:
     def __init__(self, parent, *args, **kwargs):
@@ -598,3 +563,28 @@ class ScriptTabularTreeView(ContextItemMix, TabularTreeView):
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
             self.cMenu.grab_release()
+
+
+class BarGraph(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.figure = Figure(figsize=(6, 4), dpi=100)
+        self.axes = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=parent)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, parent)
+        self.toolbar.pack_forget()
+
+    def set_axis_label(self, x_axis, y_axis, title):
+        self.axes.set_xlabel(x_axis)
+        self.axes.set_ylabel(y_axis)
+        self.axes.set_title(title)
+
+    def add_bar(self, **kwargs):
+        self.axes.bar(**kwargs)
+        self.axes.legend()
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.toolbar.pack()
+
+
+

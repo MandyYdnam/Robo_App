@@ -5,6 +5,9 @@ from . import constants as c
 import os
 from tkinter import filedialog
 from tkinter import simpledialog
+from tkinter import messagebox
+from .util import FileNameNotFoundException
+from datetime import datetime
 
 
 class CreateBatchForm(tk.Frame):
@@ -17,10 +20,11 @@ class CreateBatchForm(tk.Frame):
 
         self.inputs = {}
         self.callbacks = callbacks
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(3, weight=1)
         ########################
         # Project Information Frame
         #######################
-
         frame_projectinfo = tk.LabelFrame(self, text="Project Information")
 
         self.inputs['txb_ProjectLocation'] = w.LabelInput(frame_projectinfo, "Project Location:",
@@ -28,7 +32,7 @@ class CreateBatchForm(tk.Frame):
                                                           input_var=tk.StringVar(),
                                                           input_arg={'state': 'readonly'})
 
-        self.inputs['txb_ProjectLocation'].grid(row=0, column=0)
+        self.inputs['txb_ProjectLocation'].grid(row=0, column=0, sticky=tk.NSEW)
         self.inputs['btn_projLocation'] = w.LabelInput(frame_projectinfo, "Browse", input_class=ttk.Button,
                                                        input_var=tk.StringVar()
                                                        , input_arg={
@@ -41,8 +45,9 @@ class CreateBatchForm(tk.Frame):
                                                          input_arg={'state': 'readonly'})
 
         self.inputs['tbx_resultLocation'].variable.set(c.AppConfig.result_location)
-        self.inputs['tbx_resultLocation'].grid(row=1, column=0)
-        frame_projectinfo.grid(row=3, sticky=(tk.W + tk.E), padx=10, pady=2)  # Display Project Info Frame
+        self.inputs['tbx_resultLocation'].grid(row=1, column=0, sticky=tk.NSEW)
+        # frame_projectinfo.grid(row=0, sticky=(tk.W + tk.E), padx=10, pady=2)  # Display Project Info Frame
+        frame_projectinfo.grid(row=0, sticky=tk.NSEW, padx=10, pady=2)  # Display Project Info Frame
         frame_projectinfo.columnconfigure(0, weight=1)
 
         ########################
@@ -54,13 +59,13 @@ class CreateBatchForm(tk.Frame):
         # Adding the Folder Structure
         self.inputs['FolderStructure'] = w.FolderTreeView(self.inputs['frm_searchscripts'])
 
-        self.inputs['FolderStructure'].grid(row=0)
+        self.inputs['FolderStructure'].grid(row=0, column=0, sticky=tk.NSEW)
 
         # Adding the Search Button
         self.inputs['SearchBtn'] = w.LabelInput(self.inputs['frm_searchscripts'], "Search", input_class=ttk.Button,
                                                 input_var=tk.StringVar(),
                                                 input_arg={'command': self.callbacks['SearchBtn']})
-        self.inputs['SearchBtn'].grid(row=1, column=0)
+        self.inputs['SearchBtn'].grid(row=1, column=0, sticky=(tk.N + tk.E + tk.W))
 
         # Adding Tags Box
         self.inputs['cb_tags'] = w.LabelInput(self.inputs['frm_searchscripts'], "", input_class=ttk.Combobox,
@@ -76,7 +81,7 @@ class CreateBatchForm(tk.Frame):
                                                           , 'Suite'))
         self.inputs['SearchScripts'].set_column_width('Name', 400)
 
-        self.inputs['SearchScripts'].grid(row=0, column=1)
+        self.inputs['SearchScripts'].grid(row=0, column=1, sticky=tk.NSEW)
 
         # Adding the Search Button
         self.inputs['AddSelectedBtn'] = w.LabelInput(self.inputs['frm_searchscripts'], "Add Selected"
@@ -85,8 +90,10 @@ class CreateBatchForm(tk.Frame):
                                                      , input_arg={'command': self.callbacks['AddSelected']})
 
         self.inputs['AddSelectedBtn'].grid(row=0, column=2)
-        self.inputs['frm_searchscripts'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=2)  # Display the Search Frame
-
+        # self.inputs['frm_searchscripts'].grid(row=1, sticky=(tk.W + tk.E), padx=10, pady=2)  # Display the Search Frame
+        self.inputs['frm_searchscripts'].grid(row=1, padx=10, pady=2, sticky=tk.NSEW)  # Display the Search Frame
+        self.inputs['frm_searchscripts'].columnconfigure(0, weight=1)
+        self.inputs['frm_searchscripts'].columnconfigure(1, weight=3)
         ########################
         # Batch Frame
         #######################
@@ -104,7 +111,8 @@ class CreateBatchForm(tk.Frame):
 
         self.inputs['cb_bookMark'] = w.LabelInput(self.inputs['frm_cb_batchscripts'], label='',
                                                   input_class=ttk.Combobox,
-                                                  input_var=tk.StringVar()
+                                                  input_var=tk.StringVar(),
+                                                  input_arg={'state': "readonly"}
                                                   )
         self.inputs['cb_bookMark'].variable.set("Select Bookmark")
 
@@ -114,7 +122,7 @@ class CreateBatchForm(tk.Frame):
                                                             ('Name', 'Documentation', 'Tags', 'Suite'))
         self.inputs['trv_batchScripts'].set_column_width('Name', 500)
         self.inputs['trv_batchScripts'].set_column_width('Suite', 320)
-        self.inputs['trv_batchScripts'].grid(row=1, column=0)
+        self.inputs['trv_batchScripts'].grid(row=1, column=0, sticky=tk.NSEW)
 
         # Adding the Remove Button
         self.inputs['btn_removeSelected'] = w.LabelInput(self.inputs['frm_cb_batchscripts'], "Remove Selected",
@@ -124,25 +132,33 @@ class CreateBatchForm(tk.Frame):
         self.inputs['btn_removeSelected'].grid(row=1, column=1, sticky=tk.E)
 
         # Adding the Create Batch Button
-        self.inputs['btn_createBatch'] = w.LabelInput(self.inputs['frm_cb_batchscripts'], "Create Batch",
+        frm_bottom_btns = ttk.Frame(self.inputs['frm_cb_batchscripts'])
+        frm_bottom_btns.grid(row=3, sticky=tk.W)
+
+        self.inputs['btn_createBatch'] = w.LabelInput(frm_bottom_btns, "Create Batch",
                                                       input_class=ttk.Button,
                                                       input_var=tk.StringVar(),
                                                       input_arg={'command': self.callbacks['btn_createBatch']}
                                                       )
 
-        self.inputs['btn_createBatch'].grid(row=2, column=0, sticky=tk.W)
+        self.inputs['btn_createBatch'].grid(row=0, column=0)
 
         # Adding the Create BookMark Button
-        self.inputs['btn_createBookmark'] = w.LabelInput(self.inputs['frm_cb_batchscripts'], "Create Bookmark",
+        self.inputs['btn_createBookmark'] = w.LabelInput(frm_bottom_btns, "Create Bookmark",
                                                          input_class=ttk.Button,
                                                          input_var=tk.StringVar(),
                                                          input_arg={'command': self.callbacks['btn_createBookmark']}
                                                          )
 
-        self.inputs['btn_createBookmark'].grid(row=2, column=1, sticky=tk.W)
+        self.inputs['btn_createBookmark'].grid(row=0, column=1)
 
-        self.inputs['frm_cb_batchscripts'].grid(row=5, sticky=(tk.W + tk.E), padx=10,
+        # self.inputs['frm_cb_batchscripts'].grid(row=3, sticky=(tk.W + tk.E), padx=10,
+        #                                         pady=2)  # Display the Search Frame
+
+        self.inputs['frm_cb_batchscripts'].grid(row=3, padx=10, sticky=tk.NSEW,
                                                 pady=2)  # Display the Search Frame
+        self.inputs['frm_cb_batchscripts'].columnconfigure(0, weight=1)
+        self.inputs['frm_cb_batchscripts'].rowconfigure(1, weight=1)
 
     # Get the data for the all the Widgets
     def get(self):
@@ -177,170 +193,6 @@ class CreateBatchForm(tk.Frame):
     def __on_combobox_selected(self, *args):
         self.callbacks['cb_bookMark'](self.inputs['cb_bookMark'].get())
 
-    # def batch_details(self):
-    #     #############################
-    #     # Create a top Level window
-    #     ############################
-    #     win_batchdetails = tk.Toplevel(self)
-    #     self.inputs['win_batchdetails'] = win_batchdetails
-    #     win_batchdetails.title = "Create Batch"
-    #     win_batchdetails.lift()
-    #     win_batchdetails.grab_set()
-    #     win_batchdetails.geometry('%dx%d+%d+%d' % (600, 850, self.winfo_rootx(), self.winfo_rooty()))
-    #     win_batchdetails.resizable(width=False, height=False)
-    #     win_batchdetails.columnconfigure(0, weight=1)
-    #     ttk.Label(win_batchdetails, text="Enter the batch details", font=("TkDefaultFont", 16)).grid(row=0)
-    #
-    #     #############################
-    #     # Create a Batch Info Frame
-    #     ############################
-    #     frame_batch_info = tk.LabelFrame(win_batchdetails, text="Batch Information")
-    #     frame_batch_info.grid(row=1, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #     frame_batch_info.columnconfigure(0, weight=1)
-    #     self.inputs['txb_batchName'] = w.LabelInput(frame_batch_info, "Name:", input_class=w.ValidEntry,
-    #                                                 input_var=tk.StringVar())
-    #     self.inputs['txb_batchName'].columnconfigure(0, weight=1)
-    #     self.inputs['txb_batchName'].grid(row=0, column=0)
-    #
-    #     self.inputs['txb_batchNumberOfThreads'] = w.LabelInput(frame_batch_info, "Number of Threads:",
-    #                                                            input_class=w.ValidSpinbox,
-    #                                                            input_var=tk.StringVar(),
-    #                                                            input_arg={"from_": '1', "to": '4', "increment": '1'})
-    #     self.inputs['txb_batchNumberOfThreads'].grid(row=0, column=1)
-    #
-    #     #############################
-    #     # Create a Application Type Frame
-    #     ############################
-    #     frame_application_type = tk.LabelFrame(win_batchdetails, text="Application Type & Language")
-    #     frame_application_type.grid(row=3, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #     # frame_application_type.columnconfigure(4, weight=1)
-    #
-    #     self.inputs['rb_applicationTypeWeb'] = w.LabelInput(frame_application_type, "Web",
-    #                                                         input_class=ttk.Radiobutton,
-    #                                                         input_var=tk.StringVar()
-    #                                                         , input_arg={"value": "Web",
-    #                                                                      'command': self.cmd_select_application_type})
-    #     self.inputs['rb_applicationTypeWeb'].grid(row=0, column=1, padx=10)
-    #
-    #     self.inputs['rb_applicationTypeMobile'] = w.LabelInput(frame_application_type, "Mobile",
-    #                                                            input_class=ttk.Radiobutton,
-    #                                                            input_var=self.inputs['rb_applicationTypeWeb'].variable,
-    #                                                            input_arg={"value": "Mobile",
-    #                                                                       'command': self.cmd_select_application_type})
-    #     self.inputs['rb_applicationTypeMobile'].grid(row=0, column=0)
-    #
-    #     self.inputs['rb_application_lang_FR'] = w.LabelInput(frame_application_type, "FR",
-    #                                                          input_class=ttk.Radiobutton,
-    #                                                          input_var=tk.StringVar()
-    #                                                          , input_arg={"value": "FR"})
-    #     self.inputs['rb_application_lang_FR'].grid(row=1, column=1, padx=10)
-    #
-    #     self.inputs['rb_application_lang_EN'] = w.LabelInput(frame_application_type, "EN",
-    #                                                          input_class=ttk.Radiobutton,
-    #                                                          input_var=self.inputs['rb_application_lang_FR'].variable,
-    #                                                          input_arg={"value": "EN"})
-    #     self.inputs['rb_application_lang_EN'].grid(row=1, column=0)
-    #
-    #     #############################
-    #     # Create a Select Device/Browser Type Frame
-    #     ############################
-    #     frame_device_browser = tk.LabelFrame(win_batchdetails, text="Select Device / Browser ")
-    #     frame_device_browser.grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #     frame_device_browser.columnconfigure(0, weight=1)
-    #     self.inputs['lstbx_device'] = w.LabelInput(frame_device_browser, "Device List", input_class=tk.Listbox
-    #                                                , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
-    #                                                                                       'exportselection': 0})
-    #     # self.inputs['lstbx_device'].variable.set(self._load_device_list())
-    #
-    #     self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
-    #
-    #     self.inputs['lstbx_browser'] = w.LabelInput(frame_device_browser, "Internet Explorer", input_class=tk.Listbox
-    #                                                 , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
-    #                                                                                        'exportselection': 0})
-    #     self.inputs['lstbx_browser'].variable.set(c.AppConfig.BROWSER_LIST)
-    #
-    #     #####################################
-    #     # Mobile Center Detials
-    #     #####################################
-    #     self.inputs['frame_mc_details'] = tk.LabelFrame(win_batchdetails, text="Mobile Server Details")
-    #     self.inputs['frame_mc_details'].columnconfigure(0, weight=1)
-    #     self.inputs['frame_mc_details'].columnconfigure(1, weight=1)
-    #     self.inputs['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #
-    #     self.inputs['lstbx_mobile_center'] = w.LabelInput(self.inputs['frame_mc_details'], "Select Server:"
-    #                                                       , input_class=ttk.Combobox
-    #                                                       , input_var=tk.StringVar(),
-    #                                                       input_arg={'values': c.AppConfig.SERVER_LIST})
-    #
-    #     # self.inputs['lstbx_mobile_center'].columnconfigure(0, weight=1)
-    #     self.inputs['lstbx_mobile_center'].grid(row=0, column=0, padx=10, columnspan=2)
-    #
-    #     self.inputs['txb_mc_user_name'] = w.LabelInput(self.inputs['frame_mc_details'], "User Name:",
-    #                                                    input_class=w.ValidEntry,
-    #                                                    input_var=tk.StringVar())
-    #
-    #     self.inputs['txb_mc_user_name'].grid(row=1, column=0, padx=10)
-    #
-    #     self.inputs['txb_mc_user_pass'] = w.LabelInput(self.inputs['frame_mc_details'], "User Password:",
-    #                                                    input_class=w.ValidEntry,
-    #                                                    input_var=tk.StringVar(),
-    #                                                    input_arg={'show': '*'})
-    #     self.inputs['txb_mc_user_pass'].grid(row=1, column=1, padx=10)
-    #
-    #     #####################################
-    #     # URL Detials
-    #     #####################################
-    #     self.inputs['frame_url_details'] = tk.LabelFrame(win_batchdetails, text="URL Details")
-    #     self.inputs['frame_url_details'].columnconfigure(0, weight=1)
-    #     self.inputs['frame_url_details'].columnconfigure(1, weight=1)
-    #     # self.inputs['frame_url_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #
-    #     self.inputs['lstbx_url_center'] = w.LabelInput(self.inputs['frame_url_details'], "Select URL:"
-    #                                                    , input_class=ttk.Combobox
-    #                                                    , input_var=tk.StringVar(),
-    #                                                    input_arg={'values': c.AppConfig.URL_LIST})
-    #
-    #     self.inputs['lstbx_url_center'].grid(row=0, column=0, padx=10, columnspan=2)
-    #
-    #     #####################################
-    #     # ALM  Detials
-    #     #####################################
-    #     self.inputs['frame_alm_details'] = tk.LabelFrame(win_batchdetails, text="ALM Details")
-    #     self.inputs['frame_alm_details'].columnconfigure(0, weight=1)
-    #     self.inputs['frame_alm_details'].columnconfigure(1, weight=1)
-    #
-    #     if c.AppConfig.USE_ALM:
-    #         self.inputs['frame_alm_details'].grid(row=6, sticky=(tk.W + tk.E), padx=10, pady=10)
-    #
-    #     self.inputs['txb_alm_plan_path'] = w.LabelInput(self.inputs['frame_alm_details'], "Test Plan Path:",
-    #                                                     input_class=w.ValidEntry,
-    #                                                     input_var=tk.StringVar())
-    #     self.inputs['txb_alm_plan_path'].variable.set("Subject\Demo")
-    #
-    #     self.inputs['txb_alm_plan_path'].grid(row=0, column=0, padx=10)
-    #
-    #     self.inputs['txb_alm_lab_path'] = w.LabelInput(self.inputs['frame_alm_details'], "Test Lab Path:",
-    #                                                    input_class=w.ValidEntry,
-    #                                                    input_var=tk.StringVar())
-    #     self.inputs['txb_alm_lab_path'].variable.set("Root\Demo")
-    #
-    #     self.inputs['txb_alm_lab_path'].grid(row=0, column=1, padx=10)
-    #
-    #     self.inputs['txb_alm_test_set_name'] = w.LabelInput(self.inputs['frame_alm_details'], "Test Set Name:",
-    #                                                         input_class=w.ValidEntry,
-    #                                                         input_var=tk.StringVar())
-    #     self.inputs['txb_alm_test_set_name'].variable.set("Demo_Test_Set")
-    #
-    #     self.inputs['txb_alm_test_set_name'].grid(row=0, column=3, padx=10)
-    #
-    #     # Adding the Create Batch/ Book Mark Button
-    #     self.inputs['btn_createBatch_Bookmark'] = w.LabelInput(win_batchdetails, "Create Batch", input_class=ttk.Button,
-    #                                                            input_var=tk.StringVar(),
-    #                                                            input_arg={'command': self.callbacks[
-    #                                                                'btn_createBatch_Bookmark']})
-    #
-    #     self.inputs['btn_createBatch_Bookmark'].grid(row=8, column=0, sticky=(tk.W), padx=10)
-
     def get_errors(self):
         """Get a list of field errors in the form"""
         errors = {}
@@ -360,12 +212,6 @@ class CreateBatchForm(tk.Frame):
                                                        sfilter=['.git', '.settings', 'libspecs', '__pycache__',
                                                                 '.png'])
 
-            # parser = AppConfigParser(c.AppConfig.user_config_file)
-            # parser.readfile()
-            # if not parser.has_section(c.AppConfig.INI_APP_SETTING_SECTION):
-            #     parser.add_section(c.AppConfig.INI_APP_SETTING_SECTION)
-            # parser[c.AppConfig.INI_APP_SETTING_SECTION][c.AppConfig.INI_PROJECT_LOCATION] = folder_selected
-            # parser.writefile()
             self.callbacks['btn_projLocation'](folder_selected)
 
     def populate_scripts_table(self, test_list):
@@ -659,6 +505,8 @@ class CreateBatchDetailsForm(tk.Frame):
 
     def unload_gui(self):
         self.win_batchdetails.destroy()
+
+
 class BatchMonitor(tk.Frame):
     """The input form for the Batch Widgets"""
 
@@ -671,10 +519,12 @@ class BatchMonitor(tk.Frame):
         ########################
         # Batch Frame
         #######################
-
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
         frame_projectinfo = tk.LabelFrame(self, text="Batches")
-        frame_projectinfo.grid(row=3, sticky=(tk.W + tk.E), padx=10, pady=10)  # Display Project Info Frame
+        frame_projectinfo.grid(row=0, sticky=tk.NSEW, padx=10, pady=10)  # Display Project Info Frame
         frame_projectinfo.columnconfigure(0, weight=1)
+        frame_projectinfo.rowconfigure(0, weight=1)
 
         # Adding Table For Searched Batches
 
@@ -685,7 +535,7 @@ class BatchMonitor(tk.Frame):
                                                              '#Threads',
                                                              '#Scripts',
                                                              'Application Type',
-                                                             'Device/Browsers'), selection_mode='browse', height=35,
+                                                             'Device/Browsers'), selection_mode='browse',
                                                             **kwargs)
 
         self.inputs['trv_batches'].set_column_width('Batch ID', 60)
@@ -694,7 +544,8 @@ class BatchMonitor(tk.Frame):
         self.inputs['trv_batches'].set_column_width('#Scripts', 55)
         self.inputs['trv_batches'].set_column_width('Application Type', 100)
         self.inputs['trv_batches'].set_column_width('Creation Date', 120)
-        self.inputs['trv_batches'].grid(row=0, column=0)
+        self.inputs['trv_batches'].grid(row=0, column=0, sticky=tk.NSEW)
+
         self.inputs['trv_batches'].add_cmd(label="Open",
                                            command=self.callbacks['Open'])
 
@@ -713,7 +564,7 @@ class BatchMonitor(tk.Frame):
         self.inputs['trv_batches'].tree.bind("<Double-1>", self.on_double_click_record)
 
         frame_batch_buttons = tk.Frame(self)
-        frame_batch_buttons.grid(row=4, column=0, sticky=(tk.W + tk.E), padx=10)
+        frame_batch_buttons.grid(row=1, column=0, sticky=(tk.W + tk.E), padx=10, pady=10)
         # Adding the Open Selected Batch
         self.inputs['btn_open_selected'] = w.LabelInput(frame_batch_buttons, "Open Selected"
                                                         , input_class=ttk.Button
@@ -725,6 +576,21 @@ class BatchMonitor(tk.Frame):
                                                   , input_var=tk.StringVar()
                                                   , input_arg={'command': self.callbacks['btn_refresh']})
         self.inputs['btn_refresh'].grid(row=0, column=1)
+        self.inputs['btn_download'] = w.LabelInput(frame_batch_buttons, "Download"
+                                                   , input_class=ttk.Button
+                                                   , input_var=tk.StringVar()
+                                                   , input_arg={'command': self.download_detail_report})
+        self.inputs['btn_download'].grid(row=0, column=2)
+
+    def download_detail_report(self):
+        try:
+            self.inputs['trv_batches'].to_csv()
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
+        except PermissionError as e:
+            messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
+                                 parent=self)
+        except FileNameNotFoundException:
+            pass
 
     def on_double_click_record(self, *args):
         self.callbacks['on_double_click']()
@@ -754,11 +620,13 @@ class BatchExecutionMonitor(tk.Toplevel):
         self.title("Batch Exexution Monitor:{}".format(batch_id))
         self.lift()
         self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
         self.Batch_ID = batch_id
 
         frame_batch_execution_details = tk.LabelFrame(self, text="Batch Execution Details")
-        frame_batch_execution_details.grid(row=1, sticky=(tk.W + tk.E), padx=10, pady=10)
+        frame_batch_execution_details.grid(row=1, sticky=tk.NSEW, padx=10, pady=10)
         frame_batch_execution_details.columnconfigure(0, weight=1)
+        frame_batch_execution_details.rowconfigure(0, weight=1)
 
         ###################################################
         # Batch Information Section
@@ -833,7 +701,7 @@ class BatchExecutionMonitor(tk.Toplevel):
         self.inputs['trv_batchScripts'].set_column_width('Device/Browser', 100)
         self.inputs['trv_batchScripts'].set_column_width('Run Count', 60)
 
-        self.inputs['trv_batchScripts'].grid(row=0, column=0)
+        self.inputs['trv_batchScripts'].grid(row=0, column=0, sticky=tk.NSEW)
 
         self.inputs['trv_batchScripts'].add_cmd(label="Open",
                                                 command=self.callbacks['Open'])
@@ -852,6 +720,21 @@ class BatchExecutionMonitor(tk.Toplevel):
                                                   , input_var=tk.StringVar()
                                                   , input_arg={'command': self.callbacks['Refresh']})
         self.inputs['btn_refresh'].grid(row=0, column=0)
+        self.inputs['btn_download_to_csc'] = w.LabelInput(frame_btns_batch_execution_details, "Download"
+                                                          , input_class=ttk.Button
+                                                          , input_var=tk.StringVar()
+                                                          , input_arg={'command': self.download_detail_report})
+        self.inputs['btn_download_to_csc'].grid(row=0, column=1)
+
+    def download_detail_report(self):
+        try:
+            self.inputs['trv_batchScripts'].to_csv()
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
+        except PermissionError as e:
+            messagebox.showerror('PermissionError', "{}. Please close file if already opened".format(e.strerror),
+                                 parent=self)
+        except FileNameNotFoundException as e:
+            pass
 
     def on_double_click_record(self, *args):
         self.callbacks['on_double_click']()
@@ -1522,3 +1405,152 @@ class AlmLoginForm(tk.Toplevel):
         self.inputs['cb_domain'].input.configure(state=tk.DISABLED)
         self.inputs['cb_project'].input.configure(state=tk.DISABLED)
         self.inputs['btn_login'].input.configure(state=tk.DISABLED)
+
+
+class StatisticsForm(tk.Frame):
+    """View for Stats Form"""
+
+    def __init__(self, parent, callbacks, stats_type=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        # Dictonary to keep tracK of input Widgets
+        self.inputs = {}
+        self.callbacks = callbacks
+        self.stats_type = stats_type if stats_type else []
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=3)
+        self.rowconfigure(2, weight=1)
+
+        ########################
+        # Selection Frame
+        #######################
+        frm_selection = tk.LabelFrame(self, text="Selection")
+        frm_selection.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)  # Display Selection  Frame
+        frm_selection.columnconfigure(0, weight=1)
+        self.inputs['cb_select_stats'] = w.LabelInput(frm_selection, label='',
+                                                      input_class=ttk.Combobox,
+                                                      input_var=tk.StringVar(),
+                                                      input_arg={'state': "readonly"}
+                                                      )
+        self.inputs['cb_select_stats'].variable.set("Select Option")
+        self.inputs['cb_select_stats'].set(self.stats_type)
+        self.inputs['cb_select_stats'].bind("<<ComboboxSelected>>", self.__on_combobox_selected)
+        self.inputs['cb_select_stats'].grid(row=0, column=0, sticky="nsew", padx=10, pady=3)
+        date_frame = ttk.Frame(frm_selection)
+        date_frame.grid(row=1, column=0, sticky="nsew")
+        date_frame.columnconfigure(0, weight=1)
+        date_frame.columnconfigure(1, weight=1)
+        self.inputs['tb_from_date'] = w.LabelInput(date_frame, label='From Date(yyyy-mm-dd):',
+                                                   input_class=w.ValidDateEntry,
+                                                   input_var=tk.StringVar())
+        self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
+        self.inputs['tb_from_date'].set(datetime.now().strftime('%Y-%m-%d'))
+        self.inputs['tb_to_date'] = w.LabelInput(date_frame, label='To Date(yyyy-mm-dd):',
+                                                 input_class=w.ValidDateEntry,
+                                                 input_var=tk.StringVar())
+        self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
+        self.inputs['tb_to_date'].set(datetime.now().strftime('%Y-%m-%d'))
+        self.inputs['btn_generate_report'] = w.LabelInput(date_frame, label='Generate Report',
+                                                          input_class=ttk.Button,
+                                                          input_var=tk.StringVar(),
+                                                          input_arg={'command': self.callbacks['generate_report']})
+        self.inputs['btn_generate_report'].grid(row=2, column=0, sticky="nsew", padx=10, pady=3)
+
+        self.inputs['btn_download_report'] = w.LabelInput(date_frame, label='Download Report',
+                                                          input_class=ttk.Button,
+                                                          input_var=tk.StringVar(),
+                                                          input_arg={'command': self.download_detail_report})
+        # input_arg={'command': self.callbacks['download_report']})
+
+        self.inputs['btn_download_report'].grid(row=2, column=1, sticky="nsew", padx=10, pady=3)
+
+        ########################
+        # Stats Frame
+        #######################
+        self.frm_stats = tk.LabelFrame(self, text="Statistics")
+        self.frm_stats.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)  # Display Stats  Frame
+        self.frm_stats.columnconfigure(0, weight=1)
+        self.frm_stats.columnconfigure(1, weight=1)
+
+        ########################
+        # Graph Frame
+        #######################
+        self.frm_graph_frame = tk.Frame(self.frm_stats)
+        self.frm_graph_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)  # Display Graph  Frame
+        self.frm_graph_frame.columnconfigure(0, weight=1)
+        self.bar_graph = w.BarGraph(self.frm_graph_frame)
+
+        ########################
+        # Details Frame
+        #######################
+        self.frm_details_grid = tk.LabelFrame(self, text="Details")
+        self.frm_details_grid.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)  # Display Details  Frame
+        self.frm_details_grid.columnconfigure(0, weight=1)
+        self.frm_details_grid.rowconfigure(0, weight=1)
+
+    def populate_report_table(self, data_records):
+        """Function to populate report table"""
+        if self.inputs.get('trv_report_table', None) is not None:
+            self.inputs['trv_report_table'].destroy()
+        self.inputs['trv_report_table'] = w.TabularTreeView(self.frm_details_grid,
+                                                            columnNames=tuple(data_records[0].keys()))
+        for data in data_records:
+            self.inputs['trv_report_table'].insert_item(data, values=list(dict(data).values()))
+
+        self.inputs['trv_report_table'].grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=5)
+
+    def populate_statistics_data(self, data_records):
+        """Function to populate stats data"""
+        if self.inputs.get('trv_stats_table', None) is not None:
+            self.inputs['trv_stats_table'].destroy()
+        self.inputs['trv_stats_table'] = w.TabularTreeView(self.frm_stats,
+                                                           columnNames=('Type', '#'))
+        for key, value in data_records.items():
+            self.inputs['trv_stats_table'].insert_item(data_records, values=[key, value])
+        self.inputs['trv_stats_table'].grid(row=0, column=0, sticky=tk.NSEW, padx=10, pady=5)
+
+    def download_detail_report(self):
+        if self.inputs.get('trv_report_table', None) is None:
+            messagebox.showerror('No Report Found', "Please Generate a report before Downloading",
+                                 parent=self)
+            return
+        try:
+            self.inputs['trv_report_table'].to_csv()
+            messagebox.showinfo('Success.', 'Download Completed!!!', parent=self)
+        except PermissionError as e:
+            messagebox.showerror('Download Error', "{}. Please close file if already opened".format(e.strerror),
+                                 parent=self)
+        except FileNameNotFoundException as e:
+            pass
+
+    def add_bar_to_chart(self, title, x_label, y_label, bar_graph_data):
+        # Initial Cleanup
+        self.bar_graph.axes.clear()
+        self.bar_graph.canvas.draw()
+        self.bar_graph.set_axis_label(x_label, y_label, title)
+        for bar in bar_graph_data:
+            self.bar_graph.add_bar(**bar)
+
+    # Get the data for the all the Widgets
+    def get(self):
+        data = {}
+        for key, widget in self.inputs.items():
+            if widget is None or widget.widgetName in ('labelframe',):
+                pass
+            else:
+                data[key] = widget.get()
+        return data
+
+    def __on_combobox_selected(self, *args):
+        self.callbacks['cb_on_select_stats'](self.inputs['cb_select_stats'].get())
+
+    def set_date_fields_visibility(self, visible=True):
+        if not visible:
+            self.inputs['tb_from_date'].input.configure(state='readonly')
+            self.inputs['tb_to_date'].input.configure(state='readonly')
+            self.inputs['tb_from_date'].grid_forget()
+            self.inputs['tb_to_date'].grid_forget()
+        else:
+            self.inputs['tb_from_date'].grid(row=1, column=0, sticky="nsew", padx=10)
+            self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
+            self.inputs['tb_from_date'].input.configure(state='default')
+            self.inputs['tb_to_date'].input.configure(state='default')

@@ -31,16 +31,18 @@ if not initialize_db_model.is_batch_table():
     print("initialize batch and user")
     initialize_db_model.cmd_create_user_table()
     initialize_db_model.cmd_create_batch_table()
+    initialize_db_model.cmd_create_batch_index()
 
 if not initialize_db_model.is_script_table():
     print("initialize scripts")
     initialize_db_model.cmd_create_scripts_table()
+    initialize_db_model.cmd_create_scripts_index()
 
 if not initialize_db_model.is_command_var_table():
     print("initialize command")
     initialize_db_model.cmd_create_command_var_table()
-
     initialize_db_model.cmd_create_test_run_table()
+    initialize_db_model.cmd_create_test_run_index()
 
 
 def main():

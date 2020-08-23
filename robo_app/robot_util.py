@@ -2,7 +2,7 @@ from datetime import datetime
 from robot import run
 import os
 from robot.libraries.BuiltIn import BuiltIn
-from robot.api import TestData
+from robot.api import TestData, ResourceFile, TestCaseFile
 from . import models as m
 from multiprocessing import Pool
 import multiprocessing
@@ -64,20 +64,6 @@ def get_robot_test_list(suite, test_list=None):
     return _get_robot_test_list(suite, test_list)
 
 
-# def get_robot_test_list2(suite, test_tags=None, test_list=None):
-#     """Return Test as Dict"""
-#     tags = list(test_tags) or []
-#     suite = TestData(source=suite)
-#     test_list = _get_robot_test_list(suite, test_list)
-#     if not tags or tags == ['']:
-#         return sorted(
-#             [{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
-#              test_list], key=itemgetter('name'))
-#     else:
-#         return sorted(
-#             [{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
-#              test_list if set(tags).issubset(set(test.tags))], key=itemgetter('name'))
-
 def get_robot_test_list2(suite, test_tags=None, test_list=None):
     """Return Test as Dict"""
     tags = list(test_tags) or []
@@ -89,6 +75,7 @@ def get_robot_test_list2(suite, test_tags=None, test_list=None):
         tags = {tag.lower() for tag in tags}
         return sorted([{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
              test_list if set(tags).issubset(set([tag.lower() for tag in test.tags]))], key=itemgetter('name'))
+
 
 def _get_robot_test_list(suite, test_list=None):
     """
@@ -113,6 +100,27 @@ def get_project_tags(suite):
     return sorted(list(set(tag_list)))  # removing duplicates
 
 
+def get_project_stats(source):
+    proj_data = []
+    for subdir, dirs, files in os.walk(source):
+        for filename in files:
+            data_object =None
+            filepath = subdir + os.sep + filename
+            if filepath.endswith(".resource"):
+                data_object = ResourceFile(filepath).populate()
+
+            elif filepath.endswith(".robot"):
+                data_object = TestCaseFile(source=filepath).populate()
+
+            if data_object:
+                proj_data.append({'Source': filepath,
+                                  'File Name': data_object.name,
+                                  'Keywords': len(data_object.keyword_table),
+                                  'Test Cases': len(data_object.testcase_table)})
+
+    return proj_data
+
+
 def _get_tags(suite):
     tags = []
 
@@ -134,9 +142,10 @@ def _get_tags(suite):
 class ScriptStatus():
     NOT_RUN = "Not Run"
     RUNNING = "Running"
-    RERUN = "Re-Run"
+    RERUN = "Re Run"
     PASSED = "Passed"
     FAIL = "Failed"
+    STOPPED = 'Stopped'
 
 
 class TestRunnerAgent:
