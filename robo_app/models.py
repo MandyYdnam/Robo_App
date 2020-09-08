@@ -600,7 +600,7 @@ tbl_testruns.Batch_ID=?"""
     def rerun_script(self, run_id):
         """Stops the Script based on ID"""
         try:
-            sql_query = "Update tbl_testruns SET Status ='?'  WHERE RUN_ID=?"
+            sql_query = "Update tbl_testruns SET Status =?  WHERE RUN_ID=?"
             return self.query(sql_query, (ScriptStatus.RERUN, run_id))
         except Exception as e:
             print(e)
