@@ -20,15 +20,12 @@ class AppConfig:
     user_bookmarks_path = os.path.join(user_folder_path, "bookmarks")
     INI_APP_SETTING_SECTION = 'APP_SETTINGS'
     INI_PROJECT_LOCATION = 'project_location'
-    SERVER_LIST = ["Server1",
-                   "Server2",
-                   "Server3"]
-    BROWSER_LIST = ['Chrome', 'Safari', 'Firefox', 'IE']
-    URL_LIST = ['URL1',
-                'URL2']
-    DEVICE_LIST = ['DUMMY DEVICE1', 'DUMMY DEVICE2']
+    SERVER_LIST = []
+    BROWSER_LIST = []
+    URL_LIST = []
+    DEVICE_LIST = []
     USE_ALM = False
-    ALM_URI = "enter your alm uri"
+    ALM_URI = ""
 
 
 class DatabaseConfig:
