@@ -18,7 +18,7 @@ Full list of fixes and enhancements
       - Update Label "Re-run" to "Rerun batch"
 
 
-Altogether 7 issues. View on the `issue tracker <https://github.com/robotframework/SeleniumLibrary/issues?q=milestone%3Av4.4.0>`__.
+Altogether 2 issues. View on the Git hub
 
 .. _#2: https://github.com/MandyYdnam/Robo_App/issues/2
 .. _#4: https://github.com/MandyYdnam/Robo_App/issues/4
