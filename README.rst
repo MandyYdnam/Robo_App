@@ -22,6 +22,7 @@ Installation Requirements
 * `Robot Framework`_
 * Tkinter
 * requests_
+* matplotlib_
 
 Installation
 ------------
@@ -40,15 +41,8 @@ To run the tool Run following in Terminal/Command
 ALM Authentication Configuration
 --------------------------------
 This Application comes with ALM Authentication. By Default this is feature is disabled.
-To enable this feature, Download the source from the `GitHub`_
-Update Following in constants.py
-
-* USE_ALM = True
-* ALM_URI = "enter your alm uri"
-
-And Build the distribution from source.
-Once done, Install the newly build package.
-
+To enable this feature, Select Options->Use ALM from the Options Menu.
+Note: In order it to work, Make sure you are setting ALM URL from Options->Preferences Menu.
 
 Usage
 --------------------------------
@@ -120,12 +114,17 @@ History
 
     * - Version
       - Features/enhancements
+    * - 0.1.0
+      - Added Options Menu,
+        Bug Fixes
     * - 0.0.9
       - Clone Batch Feature,
         Fixed Broken RST
     * - 0.0.8
       - Added Mac Compatibility,
         Sorting For Batch Execution Monitor
+
+
 
 
 
@@ -137,3 +136,4 @@ History
 .. _requests: https://pypi.org/project/requests/
 .. _Setting variables in command line: https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#setting-variables-in-command-line
 .. _Mandeep Dhiman: https://github.com/MandyYdnam
+.. _matplotlib: https://matplotlib.org/
