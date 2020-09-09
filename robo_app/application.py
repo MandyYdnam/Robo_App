@@ -1,5 +1,3 @@
-import os
-import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
 from . import controller as c
@@ -98,9 +96,6 @@ class Application(tk.Tk):
                          'Please restart application for ALM Settings to take effect.')
         messagebox.showwarning(title='Warning!!!', message=about_message, detail=about_details)
         self.quit()
-        # python = sys.executable
-        # print('sys argv', sys.argv)
-        # os.execl(python, python, *sys.argv)
 
     def callback_preference(self):
         """Call back function for the Preferences"""

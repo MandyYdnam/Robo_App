@@ -1,5 +1,3 @@
-import sys
-
 from . import views as v
 from . import models as m
 from . import network as n
@@ -812,9 +810,6 @@ class ALMLoginController:
         about_details = ('Restart Required.\n'
                          'Please restart application for ALM Settings to take effect.')
         messagebox.showwarning(title='Warning!!!', message=about_message, detail=about_details)
-        # python = sys.executable
-        # print('sys argv',sys.argv)
-        # os.execl(python, python, *sys.argv)
         self.login_view.quit()
 
 
