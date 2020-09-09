@@ -1299,13 +1299,16 @@ class CreateBookMark(tk.Toplevel):
 class AlmLoginForm(tk.Toplevel):
     """The input form for the Batch Widgets"""
 
-    def __init__(self, parent, callbacks, *args, **kwargs):
+    def __init__(self, parent, callbacks, settings, *args, **kwargs):
 
         super().__init__(parent, *args, **kwargs)
         self.inputs = {}
         self.frames = {}
         self.data_dict = {}
         self.callbacks = callbacks
+        self.settings = settings
+        menu = MainMenu(self, self.settings, self.callbacks)
+        self.configure(menu=menu)
         self.resizable(width=False, height=False)
         parent.update_idletasks()
         x = int(parent.winfo_x()) + 100
@@ -1593,7 +1596,6 @@ class Preferences(tk.Toplevel):
         self.callbacks = callbacks
         self.title("Preferences")
         self.lift()
-        self.grab_set()
         self.columnconfigure(0, weight=1)
 
         ttk.Label(self, text="Preferences", font=("TkDefaultFont", 16)).grid(row=0)

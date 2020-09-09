@@ -95,10 +95,12 @@ class Application(tk.Tk):
         """show warning Dialouge"""
         about_message = 'Warning!!!!'
         about_details = ('Restart Required.\n'
-                         'Program will restart for ALM Settings to take effect.')
+                         'Please restart application for ALM Settings to take effect.')
         messagebox.showwarning(title='Warning!!!', message=about_message, detail=about_details)
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
+        self.quit()
+        # python = sys.executable
+        # print('sys argv', sys.argv)
+        # os.execl(python, python, *sys.argv)
 
     def callback_preference(self):
         """Call back function for the Preferences"""
