@@ -16,6 +16,7 @@ from . import util as u
 from collections import Counter
 from numpy import add as num_py_add
 from textwrap import wrap
+import tkinter as tk
 
 
 class CreateBatchController:
@@ -707,9 +708,20 @@ class ALMLoginController:
     def __init__(self, parent, *args, **kwargs):
         self.domain_dd = {}
         callbacks = {'btn_authenticate': self.callback_authenicate,
-                     'btn_login': self.callback_login}
-        self.login_view = v.AlmLoginForm(parent, callbacks, *args, **kwargs)
+                     'btn_login': self.callback_login,
+                     'file->quit': self.callback_quit,
+                     'options->use_alm': self.callback_use_aml,
+                     'options->preferences': self.callback_preference
+                     }
+        """For Menu Login"""
+        self.settings_model = m.SettingsModel()
+        self.load_settings()
+
+        self.login_view = v.AlmLoginForm(parent, callbacks, self.settings, *args, **kwargs)
         self.login_model = n.ALM_API(AppConfig.ALM_URI)
+
+    def callback_quit(self):
+        self.login_view.quit()
 
     def callback_authenicate(self):
         """Callback function to control the Authentication"""
@@ -756,6 +768,58 @@ class ALMLoginController:
         else:
             messagebox.showerror('Error', 'Hold On. Understand you are in Hurry but I think you forgot something',
                                  parent=self.login_view)
+
+    def load_settings(self):
+        '''Loads the settings into self.settings dict'''
+        '''There is pusrpose of not using the () in the end to the tk variable because we will initialize it with the
+        value coming from setting model. Look this line self.settings[key] = vartype(value=data['value']) and this 
+        is similar to saying tk.BooleanVar(value=data['value'])'''
+        vartypes = {'bool': tk.BooleanVar,
+                    'str': tk.StringVar,
+                    'int': tk.IntVar,
+                    'float': tk.DoubleVar}
+        self.settings = {}
+        for key, data in self.settings_model.variables.items():
+            vartype = vartypes.get(data['type'], tk.StringVar)
+            self.settings[key] = vartype(value=data['value'])
+
+        # Adding a Trace in the these variable so that if it changed in the UI so it can tracker
+        for var in self.settings.values():
+            var.trace('w', self.save_settings)
+        self.load_configurations()
+
+    def save_settings(self, *args):
+        """Save the current settings to a preferences file"""
+        for key, variable in self.settings.items():
+            self.settings_model.set(key, variable.get())
+
+        self.settings_model.save()
+
+    def load_configurations(self):
+        """Load the App config Object"""
+        AppConfig.USE_ALM = self.settings['use alm'].get()
+        AppConfig.ALM_URI = self.settings['alm_url'].get()
+        AppConfig.BROWSER_LIST = self.settings['browser_list'].get().split('||')
+        AppConfig.URL_LIST = self.settings['url_list'].get().split('||')
+        AppConfig.DEVICE_LIST = self.settings['device_list'].get().split('||')
+        AppConfig.SERVER_LIST = self.settings['device_Server_list'].get().split('||')
+
+    def callback_use_aml(self):
+        """show warning Dialouge"""
+        about_message = 'Warning!!!!'
+        about_details = ('Restart Required.\n'
+                         'Please restart application for ALM Settings to take effect.')
+        messagebox.showwarning(title='Warning!!!', message=about_message, detail=about_details)
+        self.login_view.quit()
+
+
+    def callback_preference(self):
+        """Call back function for the Preferences"""
+        v.Preferences(self.login_view, self.settings, {'preference->save': self.callback_save_preference})
+
+    def callback_save_preference(self):
+        """Load new configuration"""
+        self.load_configurations()
 
 
 class StatisticsController:

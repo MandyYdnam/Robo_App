@@ -1299,13 +1299,16 @@ class CreateBookMark(tk.Toplevel):
 class AlmLoginForm(tk.Toplevel):
     """The input form for the Batch Widgets"""
 
-    def __init__(self, parent, callbacks, *args, **kwargs):
+    def __init__(self, parent, callbacks, settings, *args, **kwargs):
 
         super().__init__(parent, *args, **kwargs)
         self.inputs = {}
         self.frames = {}
         self.data_dict = {}
         self.callbacks = callbacks
+        self.settings = settings
+        menu = MainMenu(self, self.settings, self.callbacks)
+        self.configure(menu=menu)
         self.resizable(width=False, height=False)
         parent.update_idletasks()
         x = int(parent.winfo_x()) + 100
@@ -1554,3 +1557,122 @@ class StatisticsForm(tk.Frame):
             self.inputs['tb_to_date'].grid(row=1, column=1, sticky="nsew", padx=10)
             self.inputs['tb_from_date'].input.configure(state='default')
             self.inputs['tb_to_date'].input.configure(state='default')
+
+
+class MainMenu(tk.Menu):
+    """Application's Main Menu"""
+    def __init__(self, parent, settings, callbacks, **kwargs):
+        super().__init__(parent, **kwargs)
+        file_menu = tk.Menu(self, tearoff=False)
+        file_menu.add_separator()
+        file_menu.add_command(label='Quit', command=callbacks['file->quit'])
+        self.add_cascade(label='File', menu=file_menu)
+        options_menu = tk.Menu(self, tearoff=False)
+        options_menu.add_checkbutton(label='Use ALM', variable=settings['use alm'], command=callbacks['options->use_alm'])
+        options_menu.add_command(label='Preferences',
+                                     command=callbacks['options->preferences'])
+        self.add_cascade(label='Options', menu=options_menu)
+
+        help_menu = tk.Menu(self, tearoff=False)
+        help_menu.add_command(label='About', command=self.show_about)
+        self.add_cascade(label='About', menu=help_menu)
+
+    def show_about(self):
+        """show about dialog"""
+        about_message = 'Robot Executor'
+        about_details = ('By Mandeep Dhiman\n'
+                         'For assistance please contact the author.')
+        messagebox.showinfo(title='About', message=about_message, detail=about_details)
+
+
+class Preferences(tk.Toplevel):
+    """Class for Preferences"""
+
+    def __init__(self, parent, settings_variable, callbacks, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        # Dictonary to keep tracK of input Widgets
+        self.inputs = {}
+        self.frames = {}
+        self.callbacks = callbacks
+        self.title("Preferences")
+        self.lift()
+        self.columnconfigure(0, weight=1)
+
+        ttk.Label(self, text="Preferences", font=("TkDefaultFont", 16)).grid(row=0)
+
+        #############################
+        # Create a ALM Info Frame
+        ############################
+        frame_alm_info = tk.LabelFrame(self, text="ALM Settings")
+        frame_alm_info.grid(row=1, sticky=(tk.W + tk.E), padx=10, pady=10)
+        frame_alm_info.columnconfigure(0, weight=1)
+        self.inputs['txb_alm_url'] = w.LabelInput(frame_alm_info, "ALM URL:", input_class=w.ValidEntry,
+                                                     input_var=settings_variable['alm_url'])
+        self.inputs['txb_alm_url'].columnconfigure(0, weight=1)
+        self.inputs['txb_alm_url'].grid(row=0, column=0, sticky=(tk.W + tk.E))
+
+        #############################
+        # Create BROWSER Settings Frame
+        ############################
+        frame_web_info = tk.LabelFrame(self, text="Web/Browser Settings")
+        frame_web_info.columnconfigure(0, weight=1)
+        frame_web_info.grid(row=2, sticky=(tk.W + tk.E), padx=10, pady=10)
+        self.inputs['txb_browser_list'] = w.LabelInput(frame_web_info, "Browser List:", input_class=w.ValidEntry,
+                                                  input_var=settings_variable['browser_list'])
+        self.inputs['txb_browser_list'].columnconfigure(0, weight=1)
+        self.inputs['txb_browser_list'].grid(row=0, column=0, sticky=(tk.W + tk.E))
+
+        self.inputs['txb_url_list'] = w.LabelInput(frame_web_info, "URL List:", input_class=w.ValidEntry,
+                                                       input_var=settings_variable['url_list'])
+        self.inputs['txb_url_list'].columnconfigure(0, weight=1)
+        self.inputs['txb_url_list'].grid(row=1, column=0, sticky=(tk.W + tk.E))
+        tk.Label(frame_web_info, text="Add list items separated by '||'").grid(row=3, column=0, sticky=(tk.W + tk.E))
+        #############################
+        # Create Mobile Settings Frame
+        ############################
+        frame_mobile_info = tk.LabelFrame(self, text="Mobile Settings")
+        frame_mobile_info.columnconfigure(0, weight=1)
+        frame_mobile_info.grid(row=3, sticky=(tk.W + tk.E), padx=10, pady=10)
+        self.inputs['txb_device_list'] = w.LabelInput(frame_mobile_info, "Device List:", input_class=w.ValidEntry,
+                                                       input_var=settings_variable['device_list'])
+        self.inputs['txb_device_list'].columnconfigure(0, weight=1)
+        self.inputs['txb_device_list'].grid(row=0, column=0, sticky=(tk.W + tk.E))
+
+        self.inputs['txb_device_Server_list'] = w.LabelInput(frame_mobile_info, "Device Server List:", input_class=w.ValidEntry,
+                                                   input_var=settings_variable['device_Server_list'])
+        self.inputs['txb_device_Server_list'].columnconfigure(0, weight=1)
+        self.inputs['txb_device_Server_list'].grid(row=1, column=0, sticky=(tk.W + tk.E))
+        tk.Label(frame_mobile_info, text="Add list items separated by '||'").grid(row=3, column=0, sticky=(tk.W + tk.E))
+
+        self.inputs['btn_save'] = w.LabelInput(self, "Save",
+                                                 input_class=ttk.Button,
+                                                 input_var=tk.StringVar(),
+                                                 input_arg={'command': self.save})
+
+        self.inputs['btn_save'].grid(row=4, column=0, sticky=(tk.W), padx=10)
+
+
+
+
+    # Get the data for the all the Widgets
+    def get(self):
+        data = {}
+        for key, widget in self.inputs.items():
+            # print(key)
+            data[key] = widget.get()
+        return data
+
+    def get_errors(self):
+        """Get a list of field errors in the form"""
+        errors = {}
+        for widgetName, widget in self.inputs.items():
+            if hasattr(widget, "input") and hasattr(widget.input, 'trigger_focusout_validation'):
+                widget.input.trigger_focusout_validation()
+            if hasattr(widget, "error") and widget.error.get():
+                errors[widgetName] = widget.error.get()
+        return errors
+
+    def save(self):
+        self.destroy()
+        self.callbacks['preference->save']()
+

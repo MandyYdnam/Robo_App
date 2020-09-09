@@ -9,6 +9,7 @@ import sqlite3 as sq
 import logging
 from .util import RunTimeData
 from .robot_util import ScriptStatus
+import json
 
 
 
@@ -599,7 +600,7 @@ tbl_testruns.Batch_ID=?"""
     def rerun_script(self, run_id):
         """Stops the Script based on ID"""
         try:
-            sql_query = "Update tbl_testruns SET Status ='?'  WHERE RUN_ID=?"
+            sql_query = "Update tbl_testruns SET Status =?  WHERE RUN_ID=?"
             return self.query(sql_query, (ScriptStatus.RERUN, run_id))
         except Exception as e:
             print(e)
@@ -887,4 +888,41 @@ tbl_testruns.Start_Time BETWEEN ? AND ?"""
             raise e
 
 
+class SettingsModel:
+    variables = {'use alm': {'type': 'bool', 'value': False},
+                 'project_location': {'type': 'str', 'value': '~'},
+                 'alm_url': {'type': 'str', 'value': 'Enter ALM URL'},
+                 'browser_list': {'type': 'str', 'value': 'Chrome||IE||Firefox||Safari'},
+                 'url_list': {'type': 'str', 'value': 'DummyURL1||DummyURL2'},
+                 'device_list': {'type': 'str', 'value': 'DummyDevice1||DummyDevice2'},
+                 'device_Server_list': {'type': 'str', 'value': 'DummyServer1||DummyServer2'}}
 
+    def __init__(self, filename='user_setting.json'):
+        # determine the file path
+        self.filepath = os.path.join(AppConfig.user_folder_path, filename)
+        self.load()
+
+    def load(self):
+        """if file does not exist then retrun"""
+        if not os.path.exists(self.filepath):
+            return
+
+        """Load the settings from the file"""
+        with open(self.filepath, 'r') as fh:
+            raw_values = json.loads(fh.read())
+
+        # Just getting the keys that we need from the raw values
+        for key in self.variables:
+            if key in raw_values and 'value' in raw_values[key]:
+                self.variables[key]['value'] = raw_values[key]['value']
+
+    def save(self,setting=None):
+        json_string = json.dumps(self.variables)
+        with open(self.filepath,'w') as fh:
+            fh.write(json_string)
+
+    def set(self, key, value):
+        if key in self.variables and type(value).__name__ == self.variables[key]['type']:
+            self.variables[key]['value'] = value
+        else:
+            raise ValueError("Bad key or wrong variable type")
