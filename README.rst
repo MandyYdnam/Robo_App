@@ -41,8 +41,8 @@ To run the tool Run following in Terminal/Command
 ALM Authentication Configuration
 --------------------------------
 This Application comes with ALM Authentication. By Default this is feature is disabled.
-To enable this feature, Select Options->Use ALM from the Options Menu.
-Note: In order it to work, Make sure you are setting ALM URL from Options->Preferences Menu.
+To enable this feature, Select **'Options->Use ALM'** from the Options Menu.
+Note: In order it to work, Make sure you are setting ALM URL from **'Options->Preferences'** Menu.
 
 Usage
 --------------------------------
