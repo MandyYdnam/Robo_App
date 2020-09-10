@@ -9,6 +9,8 @@ Description
 * Designed to suite Mobile and Web test Automation in mind.
 * This application is written in Python_ 3.7. Not tested for Python 3.8
 * Can be integrated with Microfocus ALM Authentication.
+* Download the Historical data in csv format.
+* Dashboard for Historical Data (e.g. Test Executions)
 
 
 
@@ -34,9 +36,24 @@ pip_
 
     pip install robot-executor
 
-To run the tool Run following in Terminal/Command
+To run the Application, Run following in Terminal/Command
     roboapp
 
+How to Create a Batch
+--------------------------------
+|How To Create a Batch|
+
+How to Run a Batch
+--------------------------------
+|How To Run a Batch|
+
+How to Create a BookMark
+--------------------------------
+|How to Create a BookMark|
+
+Statistics
+--------------------------------
+|Statistics|
 
 ALM Authentication Configuration
 --------------------------------
@@ -127,8 +144,6 @@ History
 
 
 
-
-
 .. _Robot Framework: https://robotframework.org
 .. _pip: http://pip-installer.org
 .. _GitHub: https://github.com/MandyYdnam/Robo_App
@@ -137,3 +152,16 @@ History
 .. _Setting variables in command line: https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#setting-variables-in-command-line
 .. _Mandeep Dhiman: https://github.com/MandyYdnam
 .. _matplotlib: https://matplotlib.org/
+
+.. |How To Create a Batch| image:: https://media.giphy.com/media/XzovyaAGfI95husPa9/giphy.gif
+  :width: 400
+  :alt: How to Create a Batch
+
+.. |How To Run a Batch| image:: https://media.giphy.com/media/dUr8Xnr96rWMBRNVae/giphy.gif
+  :alt: How to Run a Batch
+
+.. |How to Create a BookMark| image:: https://media.giphy.com/media/UWgieA2vCfThBZnEhi/giphy.gif
+  :alt: How to Create a BookMark
+
+.. |Statistics| image:: https://media.giphy.com/media/UQsa5kdflVx8DG685x/giphy.gif
+  :alt: Statistics Demo
