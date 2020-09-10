@@ -123,6 +123,21 @@ Know Bugs
 
 * Sorting in Scripts Table
 
+Robot Framework Version Support
+--------------------------------
+
+.. list-table::
+    :header-rows: 1
+
+    * - robo-executor Version
+      - robotframwork Version Supported
+    * - v 0.1.1
+      - v <= 3.1.2
+    * - TDB
+      - v 3.2.2
+
+
+
 History
 --------------------------------
 
@@ -131,6 +146,9 @@ History
 
     * - Version
       - Features/enhancements
+    * - 0.1.1 - 0.1.2
+      - Minor Documentation fixes.
+        Requirements updated.
     * - 0.1.0
       - Added Options Menu,
         Bug Fixes
