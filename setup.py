@@ -7,7 +7,7 @@ with open("README.rst") as fh:
     long_description = fh.read()
 
 setup(
-    name="robot-executor",
+    name="robotframework-executor",
     version=robo_app.__version__,
     author="Mandeep Dhiman",
     author_email="mandeepsinghdhiman@outlook.com",
