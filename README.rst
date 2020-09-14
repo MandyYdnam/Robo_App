@@ -34,7 +34,7 @@ Using ``pip``
 The recommended installation method is using
 pip_
 
-    pip install robot-executor
+    pip install robotframework-executor
 
 To run the Application, Run following in Terminal/Command
     roboapp
