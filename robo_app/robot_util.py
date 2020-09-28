@@ -2,12 +2,17 @@ from datetime import datetime
 from robot import run
 import os
 from robot.libraries.BuiltIn import BuiltIn
-from robot.api import TestData, ResourceFile, TestCaseFile
 from . import models as m
 from multiprocessing import Pool
 import multiprocessing
 from operator import itemgetter
 from .constants import AppConfig
+from robot.version import get_version
+AppConfig.ROBOT_VERSION = get_version()
+if AppConfig.ROBOT_VERSION < '3.2.2':
+    from robot.api import TestData, ResourceFile, TestCaseFile
+else:
+    from robot.api import TestSuiteBuilder, get_model, get_resource_model
 
 
 def run_task(task):
@@ -59,21 +64,36 @@ def run_task(task):
             listener=TestRunnerAgent(task.get('Batch_ID'), task.get('RUN_ID')))
 
 
-def get_robot_test_list(suite, test_list=None):
-    suite = TestData(source=suite)
-    return _get_robot_test_list(suite, test_list)
+def get_robot_test_list(suite_path, test_tags=None, test_list=None):
+    if AppConfig.ROBOT_VERSION < '3.2.2':
+        return get_robot_test_list2(suite_path, test_tags, test_list)
+    else:
+        return get_robot_test_list_v3_2_2(suite_path, test_tags, test_list)
 
 
-def get_robot_test_list2(suite, test_tags=None, test_list=None):
+def get_robot_test_list2(suite_path, test_tags=None, test_list=None):
     """Return Test as Dict"""
-    tags = list(test_tags) or []
-    suite = TestData(source=suite)
+    tags = list(test_tags) if test_tags else []
+    suite = TestData(source=suite_path)
     test_list= _get_robot_test_list(suite, test_list)
     if not tags or tags == ['']:
         return sorted([{'name':test.name, 'doc':test.doc.value, 'tags':str(test.tags), 'source':test.source} for test in test_list], key=itemgetter('name'))
     else:
         tags = {tag.lower() for tag in tags}
         return sorted([{'name': test.name, 'doc': test.doc.value, 'tags': str(test.tags), 'source': test.source} for test in
+             test_list if set(tags).issubset(set([tag.lower() for tag in test.tags]))], key=itemgetter('name'))
+
+
+def get_robot_test_list_v3_2_2(suite_path, test_tags=None, test_list=None):
+    """Return Test as Dict"""
+    tags = list(test_tags) if test_tags else []
+    suite = TestSuiteBuilder().build(suite_path)
+    test_list= _get_robot_test_list_v3_2_2(suite, test_list)
+    if not tags or tags == ['']:
+        return sorted([{'name':test.name, 'doc':test.doc, 'tags':str(test.tags), 'source':test.source} for test in test_list], key=itemgetter('name'))
+    else:
+        tags = {tag.lower() for tag in tags}
+        return sorted([{'name': test.name, 'doc': test.doc, 'tags': str(test.tags), 'source': test.source} for test in
              test_list if set(tags).issubset(set([tag.lower() for tag in test.tags]))], key=itemgetter('name'))
 
 
@@ -93,14 +113,52 @@ def _get_robot_test_list(suite, test_list=None):
     return test_list
 
 
+def _get_robot_test_list_v3_2_2(suite, test_list=None):
+    """
+    Function to return Test List
+    Ex:
+    suite = TestSuiteBuilder().build(path_suite)
+    testList = self._get_robot_test_list(suite)
+    """
+    test_list = test_list or []
+    if os.path.isfile(suite.source):
+        test_list.extend(suite.tests)
+        return test_list
+    for child in suite.suites:
+        test_list = _get_robot_test_list_v3_2_2(child, test_list)
+    return test_list
+
+
 def get_project_tags(suite):
+    if AppConfig.ROBOT_VERSION< '3.2.2':
+        return get_project_tags2(suite)
+    else:
+        return get_project_tags3_2_2(suite)
+
+
+def get_project_tags2(suite_path):
     """Return Test as Dict"""
-    suite = TestData(source=suite)
+    suite = TestData(source=suite_path)
     tag_list = _get_tags(suite)
     return sorted(list(set(tag_list)))  # removing duplicates
 
 
+def get_project_tags3_2_2(suite_path):
+    """Return Test as Dict"""
+    suite = TestSuiteBuilder().build(suite_path)
+    tag_list = _get_tags_3_2_2(suite)
+    return sorted(list(set(tag_list)))  # removing duplicates
+
+
 def get_project_stats(source):
+    if AppConfig.ROBOT_VERSION < '3.2.2':
+        return get_project_stats_3_1_2(source)
+    else:
+        return get_project_stats_3_2_2(source)
+
+
+def get_project_stats_3_1_2(source):
+    """Project Stats for RF <3.2.2"""
     proj_data = []
     for subdir, dirs, files in os.walk(source):
         for filename in files:
@@ -121,7 +179,45 @@ def get_project_stats(source):
     return proj_data
 
 
+def get_project_stats_3_2_2(source):
+    """Project stats for RF 3.2.2 API"""
+    proj_data = []
+    for subdir, dirs, files in os.walk(source):
+        for filename in files:
+
+            filepath = subdir + os.sep + filename
+            if filepath.endswith(".resource"):
+
+                resource_model = get_resource_model(filepath)
+                kw_section = [section for section in resource_model.sections if
+                              section.__class__.__name__ == 'KeywordSection']
+                proj_data.append({'Source': filepath,
+                                  'File Name': filename,
+                                  'Keywords': len(kw_section[0].body) if kw_section else 0,
+                                  'Test Cases': 0})
+
+            if filepath.endswith(".robot"):
+                suite_model = get_model(filepath)
+                kw_section = [section for section in suite_model.sections if
+                              section.__class__.__name__ == 'KeywordSection']
+                test_section = [section for section in suite_model.sections if
+                              section.__class__.__name__ == 'TestCaseSection']
+                proj_data.append({'Source': filepath,
+                                  'File Name': filename,
+                                  'Keywords': len(kw_section[0].body) if kw_section else 0,
+                                  'Test Cases': len(test_section[0].body) if test_section else 0})
+
+    return proj_data
+
+
 def _get_tags(suite):
+    if AppConfig.ROBOT_VERSION < '3.2.2':
+        return _get_tags_3_1_2(suite)
+    else:
+        return _get_tags_3_2_2(suite)
+
+
+def _get_tags_3_1_2(suite):
     tags = []
 
     if suite.setting_table.force_tags:
@@ -135,6 +231,17 @@ def _get_tags(suite):
             tags.extend(testcase.tags.value)
 
     for child_suite in suite.children:
+        tags.extend(_get_tags(child_suite))
+    return tags
+
+
+def _get_tags_3_2_2(suite):
+    tags = []
+    for testcase in suite.tests:
+        if testcase.tags:
+            tags.extend(testcase.tags)
+
+    for child_suite in suite.suites:
         tags.extend(_get_tags(child_suite))
     return tags
 
@@ -175,6 +282,7 @@ class TestRunnerAgent:
     def start_test(self, name, attrs):
         print('testStarted', attrs)
         print("Test Name", name)
+        print(attrs)
         self._send_update(name, Status="'{}'".format(ScriptStatus.RUNNING),
                           Run_Count="Run_Count+1",
                           Start_Time="'{}'".format(self._normalize_date_time(attrs['starttime'])))

@@ -78,7 +78,7 @@ class CreateBatchController:
         """Callback when User hits Search"""
         folder_search_path = self.createbatch_view.get_selected_folder_path()
         tags_to_be_searched = self.createbatch_view.get_tags().split('|')
-        test_list = r.get_robot_test_list2(folder_search_path, test_tags=tags_to_be_searched)
+        test_list = r.get_robot_test_list(folder_search_path, test_tags=tags_to_be_searched)
         # self.createbatch_view.populate_scripts_table(test_list)
         self.createbatch_view.populate_scripts_table2(test_list)
 

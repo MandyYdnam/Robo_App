@@ -26,6 +26,7 @@ class AppConfig:
     DEVICE_LIST = []
     USE_ALM = False
     ALM_URI = ""
+    ROBOT_VERSION=''
 
 
 class DatabaseConfig:

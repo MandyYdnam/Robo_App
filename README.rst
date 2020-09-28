@@ -75,7 +75,11 @@ Usage
 * Application do not allow to overwrite existing bookmark.
 * If you really want to updated exiting bookmark, then use admin password (Pr1y@)
 
-Note:
+Note
+--------------------------------
+
+If you are running this tool in virtual environment, then make sure you install all your project dependencies in the
+same virtual environment.
 
 Information Provided on Create batch form is exposed as Command line variables to robot Test. So values in these
 fields can be used in the Robot Test as Variables.
@@ -131,9 +135,9 @@ Robot Framework Version Support
 
     * - robo-executor Version
       - robotframwork Version Supported
-    * - v 0.1.1
+    * - v 0.1.2
       - v <= 3.1.2
-    * - TDB
+    * - v 0.1.3
       - v 3.2.2
 
 
@@ -146,13 +150,15 @@ History
 
     * - Version
       - Features/enhancements
+    * - 0.1.3
+      - RF 3.2.2 Compatibility
     * - 0.1.1 - 0.1.2
       - Minor Documentation fixes.
         Requirements updated.
-    * - 0.1.0
+    * - `0.1.0`_
       - Added Options Menu,
         Bug Fixes
-    * - 0.0.9
+    * - `0.0.9`_
       - Clone Batch Feature,
         Fixed Broken RST
     * - 0.0.8
@@ -170,6 +176,8 @@ History
 .. _Setting variables in command line: https://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#setting-variables-in-command-line
 .. _Mandeep Dhiman: https://github.com/MandyYdnam
 .. _matplotlib: https://matplotlib.org/
+.. _0.1.0: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_1.0.rst
+.. _0.0.9: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_0.09.rst
 
 .. |How To Create a Batch| image:: https://media.giphy.com/media/XzovyaAGfI95husPa9/giphy.gif
   :width: 400
