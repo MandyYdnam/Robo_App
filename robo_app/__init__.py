@@ -8,7 +8,8 @@ import getpass
 from .util import RunTimeData
 import datetime
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
+
 
 RunTimeData().setdata('system_user', getpass.getuser())
 RunTimeData().setdata('login_time', datetime.datetime.now())

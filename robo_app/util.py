@@ -2,6 +2,9 @@ from configparser import ConfigParser
 import json
 from json import JSONDecodeError
 from datetime import datetime
+import logging
+from logging.config import dictConfig
+from .constants import AppConfig
 
 
 class AppConfigParser(ConfigParser):
@@ -40,6 +43,7 @@ class AppConfigParser(ConfigParser):
 class Bookmarks:
     def __init__(self, file):
         self.file = file
+        self.logger = RobotLogger(__name__).logger
 
     def __get_json_as_dict(self):
         """Function to get bookmarks dict from json"""
@@ -47,7 +51,7 @@ class Bookmarks:
             with open(self.file, 'r') as fp:
                 return json.load(fp)
         except (JSONDecodeError, FileNotFoundError) as e:
-            print(e)
+            self.logger.error(e)
             return {}
 
     def __dump_json(self, data_dict):
@@ -63,7 +67,7 @@ class Bookmarks:
             self.__dump_json(exiting_data)
             return True
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return False
 
     def get_bookmarks(self):
@@ -96,3 +100,26 @@ def format_date(str_date, frmt='%Y-%m-%d'):
 
 class FileNameNotFoundException(Exception):
     pass
+
+
+class RobotLogger:
+    logging_config = dict(
+        version=1,
+        formatters={
+            'f': {'format':
+                      '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+        },
+        handlers={
+            'h': {'class': 'logging.StreamHandler',
+                  'formatter': 'f',
+                  'level': logging.DEBUG}
+        },
+        root={
+            'handlers': ['h'],
+            'level': AppConfig.LOG_LEVEL,
+        },
+    )
+
+    def __init__(self, logger_name, *args, **kwargs):
+        dictConfig(self.logging_config)
+        self.logger = logging.getLogger(logger_name)

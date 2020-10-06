@@ -1,5 +1,5 @@
 import os
-
+import logging
 
 class FieldTypes:
     string = 1
@@ -26,6 +26,8 @@ class AppConfig:
     DEVICE_LIST = []
     USE_ALM = False
     ALM_URI = ""
+    ROBOT_VERSION =''
+    LOG_LEVEL = logging.INFO
 
 
 class DatabaseConfig:

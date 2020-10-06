@@ -17,6 +17,7 @@ from collections import Counter
 from numpy import add as num_py_add
 from textwrap import wrap
 import tkinter as tk
+from .util import RobotLogger
 
 
 class CreateBatchController:
@@ -26,6 +27,7 @@ class CreateBatchController:
 
         self.bookmark_dd = {}
         # self.load_bookmarks_data()
+        self.logger = RobotLogger(__name__).logger
         callbacks = {'btn_createBatch': self.callback_create_batch2,
                      'btn_createBatch_Bookmark': self.cmd_insert_batch_details,
                      'SearchBtn': self.callback_search_script,
@@ -78,7 +80,7 @@ class CreateBatchController:
         """Callback when User hits Search"""
         folder_search_path = self.createbatch_view.get_selected_folder_path()
         tags_to_be_searched = self.createbatch_view.get_tags().split('|')
-        test_list = r.get_robot_test_list2(folder_search_path, test_tags=tags_to_be_searched)
+        test_list = r.get_robot_test_list(folder_search_path, test_tags=tags_to_be_searched)
         # self.createbatch_view.populate_scripts_table(test_list)
         self.createbatch_view.populate_scripts_table2(test_list)
 
@@ -213,6 +215,7 @@ class CreateBatchDetailsController:
     """The input form for the Create Batch Details"""
 
     def __init__(self, parent, batch_data, *args, **kwargs):
+        self.logger = RobotLogger(__name__).logger
         self.batch_data = batch_data if batch_data else {}
         callbacks = {'btn_createBatch_Bookmark': self.callback_create_batch
                      }
@@ -328,7 +331,7 @@ class BatchMonitorController:
     """The input form for the Batch Widgets"""
 
     def __init__(self, parent, *args, **kwargs):
-
+        self.logger = RobotLogger(__name__).logger
         callbacks = {'btn_open_selected': self.callback_open_selected,
                      'Open': self.callback_tree_open,
                      'Start': self.callback_tree_start,
@@ -360,8 +363,8 @@ class BatchMonitorController:
             messagebox.showinfo("Batch Monitor", "No Batch Found")
 
     def callback_open_selected(self):
-        # print('Opening Batch Details')
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()
+        self.logger.info('Opening Batch ID:%s', row[0]['Batch_ID'])
         self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
                                                                                   batch_id=row[0]['Batch_ID'])
 
@@ -387,18 +390,19 @@ class BatchMonitorController:
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
         # self.batch_monitor_model.rerun_batch(row.Batch_ID)
+        if messagebox.askokcancel('Batch Rerun', 'Are you sure that you want run Batch ID:{}. \n This will run all '
+                                                 'the test in the batch.'.format(row['Batch_ID'])):
+            if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
+                                                                                                   None).remaining_task() == 0:
+                batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
+                test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'], re_run_scripts=True)
+                self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
+                                                                          processes=batch_details['ThreadCount'])
 
-        if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
-                                                                                               None).remaining_task() == 0:
-            batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
-            test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'], re_run_scripts=True)
-            self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
-                                                                      processes=batch_details['ThreadCount'])
-
-            self.execution_threads[row['Batch_ID']].run_command()
-        else:
-            messagebox.showwarning("Batch Execution Monitor", "Batch is already running. Please try later after "
-                                                              "stopping the batch")
+                self.execution_threads[row['Batch_ID']].run_command()
+            else:
+                messagebox.showwarning("Batch Execution Monitor", "Batch is already running. Please try later after "
+                                                                  "stopping the batch")
 
     def callback_tree_stop(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -412,15 +416,17 @@ class BatchMonitorController:
     def callback_tree_start(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
+        if messagebox.askokcancel('Batch Start', "Are you sure that you want run Batch ID:{}. \n This will run all "
+                                                 "the test with Status 'Not Run' and 'Re Run' in the batch.".format(row['Batch_ID'])):
+            if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
+                                                                                                   None).remaining_task() == 0:
+                self.logger.info('Starting Execution of Batch:%s', row['Batch_ID'])
+                batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
+                test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'])
+                self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
+                                                                          processes=batch_details['ThreadCount'])
 
-        if not self.execution_threads.get(row['Batch_ID'], None) or self.execution_threads.get(row['Batch_ID'],
-                                                                                               None).remaining_task() == 0:
-            batch_details = self.batch_monitor_model.get_batch_details(row['Batch_ID'])[0]
-            test_list = self.batch_monitor_model.get_scripts(row['Batch_ID'])
-            self.execution_threads[row['Batch_ID']] = r.ExecutionPool(task_list=test_list,
-                                                                      processes=batch_details['ThreadCount'])
-
-            self.execution_threads[row['Batch_ID']].run_command()
+                self.execution_threads[row['Batch_ID']].run_command()
 
     def callback_clone_batch(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -439,7 +445,9 @@ class BatchExecutionMonitorController:
 
     def __init__(self, parent, batch_id, *args, **kwargs):
         # super().__init__(parent, *args, **kwargs)
+        self.logger = RobotLogger(__name__).logger
         self.batch_id = batch_id
+        self.logger = u.RobotLogger(__name__).logger
         callbacks = {'Open': self.callback_tree_open,
                      'Re-Run': self.callback_tree_re_run,
                      'Update': self.callback_tree_update,
@@ -490,7 +498,7 @@ class BatchExecutionMonitorController:
         row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[
             self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
         if row['Log_path'] and os.path.exists(row['Log_path']):
-            print("Log File Path:", row['Log_path'])
+            self.logger.debug("Log File Path:%s", row['Log_path'])
             if platform == 'darwin':
                 log_path = "file:///" + row['Log_path']
             else:
@@ -502,7 +510,7 @@ class BatchExecutionMonitorController:
     def callback_tree_open_on_double_click(self):
         row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].get_selected_items()[0]
         if row['Log_path'] and os.path.exists(row['Log_path']):
-            print("Log File Path:", row['Log_path'])
+            self.logger.debug("Log File Path:%s", row['Log_path'])
             if platform == 'darwin':
                 log_path = "file:///" + row['Log_path']
             else:
@@ -516,6 +524,8 @@ class BatchExecutionMonitorController:
             row = self.batch_exec_monitor_view.inputs['trv_batchScripts'].entries[
                 self.batch_exec_monitor_view.inputs['trv_batchScripts'].cMenu.selection]
             self.batch_exec_monitor_model.rerun_script(row['RUN_ID'])
+            messagebox.showinfo("Test Updated", "Test is marked as Re-run.\nThis will not start the execution."
+                                "In order to start execution of this test, Go to 'Batch Monitor-->Right Click->Start'")
             self.refresh_script()
             self._load_batch_information()
 
@@ -541,6 +551,7 @@ class BatchUpdateController:
     """The input form for the Batch Execution Monitor Widgets"""
 
     def __init__(self, parent, batch_id, callbacks=None, *args, **kwargs):
+        self.logger = RobotLogger(__name__).logger
         self.batch_id = batch_id
         self.callbacks = callbacks if callbacks else {}
         self.callbacks['btn_update'] = self.callback_update_batch_details
@@ -606,6 +617,7 @@ class ScriptUpdateController:
 
     def __init__(self, parent, batch_id, run_id, callbacks=None, *args, **kwargs):
         # super().__init__(parent, *args, **kwargs)
+        self.logger = RobotLogger(__name__).logger
         self.batch_id = batch_id
         self.run_id = run_id
         self.callbacks = callbacks if callbacks else {}
@@ -656,7 +668,7 @@ class CreateBookMarkController():
     """The input form for the Batch Execution Monitor Widgets"""
 
     def __init__(self, parent, tests_list, *args, **kwargs):
-
+        self.logger = RobotLogger(__name__).logger
         callbacks = {'btn_createBookMark': self.callback_create_bm}
         self.create_bookmark_view = v.CreateBookMark(parent, callbacks, *args, **kwargs)
         self.create_bookmark_model = m.CreateBookMarkModel()
@@ -707,6 +719,7 @@ class ALMLoginController:
 
     def __init__(self, parent, *args, **kwargs):
         self.domain_dd = {}
+        self.logger = RobotLogger(__name__).logger
         callbacks = {'btn_authenticate': self.callback_authenicate,
                      'btn_login': self.callback_login,
                      'file->quit': self.callback_quit,
@@ -827,7 +840,7 @@ class StatisticsController:
     stats_type = ['Test Execution', 'Test Created', 'Project Statistics']
 
     def __init__(self, parent, *args, **kwargs):
-
+        self.logger = RobotLogger(__name__).logger
         callbacks = {'generate_report': self.callback_generate_report,
                      'cb_on_select_stats': self.callback_on_select_stats}
         self.stats_view = v.StatisticsForm(parent, callbacks, self.stats_type, *args, **kwargs)
