@@ -8,6 +8,7 @@ from .util import Bookmarks
 import sqlite3 as sq
 import logging
 from .util import RunTimeData
+from .util import RobotLogger
 from .robot_util import ScriptStatus
 import json
 
@@ -19,6 +20,7 @@ class Robo_Executor_SQLLiteDB():
         self.db_name = db_name
         self.connection = None
         self.curs = None
+        self.logger = RobotLogger(__name__).logger
 
     def open_connection(self):
         self.connection = sqlite3.connect(self.db_name)
@@ -35,13 +37,13 @@ class Robo_Executor_SQLLiteDB():
         if kwargs:
             sql_string = "Insert Into {}({}) VALUES({})".format(table_name, ",".join(kwargs.keys()),
                                                                 ",".join('?' * len(kwargs.keys())))
-            # print(sql_string)
+            self.logger.debug("Sql String%s", sql_string)
             values = tuple(kwargs.values())
-            # print(values)
+            self.logger.debug(values)
             self.curs.execute(sql_string, values)
             self.connection.commit()
         else:
-            print('Incorrect SQL Format. Missing SQL kwargs:')
+            self.logger.error('Incorrect SQL Format. Missing SQL kwargs:')
         return self.curs.lastrowid
 
     def close_connection(self):
@@ -83,6 +85,7 @@ class InitializeModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -159,7 +162,7 @@ class InitializeModel:
 	"Documentation"	TEXT,
 	"Source"	VARCHAR(255),
 	"Tag"	VARCHAR(255),
-	"CreationDate"	TEXT DEFAULT 'DEFAULT CURRENT_TIMESTAMP'
+	"CreationDate"	TEXT DEFAULT CURRENT_TIMESTAMP
 )"""
             return self.query(sql_query, ())
         except Exception as e:
@@ -271,6 +274,7 @@ class CreateBatchDetailsModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -327,7 +331,7 @@ class CreateBatchDetailsModel:
                                             next(device_browser_generator),
                                             RunTimeData().getdata('alm_user', RunTimeData().getdata('system_user'))))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def cmd_insert_command_variable(self, batch_id, alm_test_plan_path, alm_test_lab_path, alm_test_set_name,
@@ -354,7 +358,7 @@ class CreateBatchDetailsModel:
 
             return True
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return False
 
 
@@ -363,6 +367,7 @@ class BatchMonitorModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -384,7 +389,7 @@ class BatchMonitorModel:
             sql_query = """Select tbl_batch.Batch_ID, Batch_Name, CreationDate, ThreadCount, TestType, Browsers_OR_Devices , COUNT(tbl_testruns.Script_ID) AS ScriptCount from tbl_batch LEFT JOIN tbl_testruns ON tbl_batch.Batch_ID=tbl_testruns.Batch_ID GROUP BY tbl_batch.Batch_ID, Batch_Name, CreationDate, ThreadCount, TestType, Browsers_OR_Devices ORDER BY tbl_batch.Batch_ID DESC"""
             return self.query(sql_query, ())
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def stop_batch(self, batch_id):
@@ -393,7 +398,7 @@ class BatchMonitorModel:
             return self.query(sql_query, (ScriptStatus.STOPPED, batch_id, ScriptStatus.NOT_RUN, ScriptStatus.RERUN,
                                           ScriptStatus.RUNNING))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def rerun_batch(self, batch_id):
@@ -402,7 +407,7 @@ class BatchMonitorModel:
             sql_query = "Update tbl_testruns SET Status =? WHERE batch_id=?"
             return self.query(sql_query, (ScriptStatus.RERUN, batch_id))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def get_scripts(self, batch_id, re_run_scripts=False):
@@ -482,7 +487,7 @@ AND tbl_batch.Batch_ID={}""".format(ScriptStatus.PASSED, ScriptStatus.FAIL, Scri
 
             return self.query(sql_query, ())
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def get_clone_data(self, batch_id):
@@ -491,7 +496,7 @@ AND tbl_batch.Batch_ID={}""".format(ScriptStatus.PASSED, ScriptStatus.FAIL, Scri
                 batch_id)
             return self.query(sql_query, ())
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def get_batch_details(self, batch_id):
@@ -500,7 +505,7 @@ AND tbl_batch.Batch_ID={}""".format(ScriptStatus.PASSED, ScriptStatus.FAIL, Scri
 
             return self.query(sql_query, ())
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise
 
 
@@ -509,6 +514,7 @@ class BatchExecutionMonitorModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -603,7 +609,7 @@ tbl_testruns.Batch_ID=?"""
             sql_query = "Update tbl_testruns SET Status =?  WHERE RUN_ID=?"
             return self.query(sql_query, (ScriptStatus.RERUN, run_id))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
 
 
 class BatchUpdateModel:
@@ -611,6 +617,7 @@ class BatchUpdateModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -712,6 +719,7 @@ class ScriptUpdateModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -806,12 +814,14 @@ AND tbl_batch.Batch_ID=?"""
 
 class CreateBookMarkModel:
     def __init__(self, project_bm_file=None, user_bm_file=None):
+        self.logger = RobotLogger(__name__).logger
         self.project_bm_file = project_bm_file or os.path.join(self._get_project_location(), 'bookmarks.json')
         self.user_bm_file = user_bm_file or os.path.join(AppConfig.user_bookmarks_path,
                                                          os.path.basename(self._get_project_location()),
                                                          'bookmarks.json')
         self.project_bm_dd = Bookmarks(self.project_bm_file)
         self.user_bm_dd = Bookmarks(self.user_bm_file)
+
 
     def _get_project_location(self):
         parser = AppConfigParser(AppConfig.user_config_file)
@@ -840,6 +850,7 @@ class StatisticsModel:
     def __init__(self, host=None, database=DatabaseConfig.sqllite_db_location, user=None, password=None):
         self.connection = sq.connect(database)
         self.connection.row_factory = sq.Row
+        self.logger = RobotLogger(__name__).logger
 
     def query(self, query, parameters=None):
         cursor = self.connection.cursor()
@@ -875,7 +886,7 @@ AND
 tbl_testruns.Start_Time BETWEEN ? AND ?"""
             return self.query(sql_query, (to_date, from_date))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
     def get_test_creation_data(self, from_date, to_date):
@@ -884,7 +895,7 @@ tbl_testruns.Start_Time BETWEEN ? AND ?"""
             sql_query = """SELECT * FROM tbl_scripts WHERE tbl_scripts.CreationDate BETWEEN ? AND ?"""
             return self.query(sql_query, (to_date, from_date))
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             raise e
 
 
@@ -900,7 +911,9 @@ class SettingsModel:
     def __init__(self, filename='user_setting.json'):
         # determine the file path
         self.filepath = os.path.join(AppConfig.user_folder_path, filename)
+        self.logger = RobotLogger(__name__).logger
         self.load()
+
 
     def load(self):
         """if file does not exist then retrun"""

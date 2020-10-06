@@ -7,7 +7,9 @@ from multiprocessing import Pool
 import multiprocessing
 from operator import itemgetter
 from .constants import AppConfig
+from .util import RobotLogger
 from robot.version import get_version
+
 AppConfig.ROBOT_VERSION = get_version()
 if AppConfig.ROBOT_VERSION < '3.2.2':
     from robot.api import TestData, ResourceFile, TestCaseFile
@@ -17,18 +19,19 @@ else:
 
 def run_task(task):
     # print('worker_started:', multiprocessing.current_process().name, multiprocessing.current_process().pid)
-    print("In Run task")
-    print('BatchID:', task.get('Batch_ID'))
-    print('RUN_ID:', task.get('RUN_ID'))
-    print('Test Name', task.get('ScriptName'))
-    print('Test Source:', task.get('Source'))
+    logger = RobotLogger(__name__).logger
+    logger.debug("In Run task")
+    logger.debug('BatchID:%s', task.get('Batch_ID'))
+    logger.debug('RUN_ID:%s', task.get('RUN_ID'))
+    logger.debug('Test Name:%s', task.get('ScriptName'))
+    logger.debug('Test Source:%s', task.get('Source'))
     variable_list = []
-    print('Test Type:', task.get('TestType'))
+    logger.debug('Test Type:%s', task.get('TestType'))
+    logger.debug('Starting Test Name:%s', task.get('ScriptName'))
 
     # Change the Execution Dir
     if task.get('Project_Location'):
         os.chdir(task.get('Project_Location'))
-        # print('New dir', os.getcwd())
 
     if task.get('TestType') == 'Mobile':
         variable_list.append('ENV_DEVICE_UDID:{}'.format(task.get('Device_Browser')))
@@ -48,7 +51,7 @@ def run_task(task):
     variable_list.append('almuserpswd:{}'.format(task.get('almuserpswd', '')))
     variable_list.append('almdomain:{}'.format(task.get('almdomain', '')))
     variable_list.append('almproject:{}'.format(task.get('almproject', '')))
-    print(variable_list)
+    logger.debug(variable_list)
     result_folder = task.get('Result_Location', AppConfig.result_location)
     result_folder = os.path.join(result_folder, str(task.get('Batch_ID')))
 
@@ -88,7 +91,7 @@ def get_robot_test_list_v3_2_2(suite_path, test_tags=None, test_list=None):
     """Return Test as Dict"""
     tags = list(test_tags) if test_tags else []
     suite = TestSuiteBuilder().build(suite_path)
-    test_list= _get_robot_test_list_v3_2_2(suite, test_list)
+    test_list = _get_robot_test_list_v3_2_2(suite, test_list)
     if not tags or tags == ['']:
         return sorted([{'name':test.name, 'doc':test.doc, 'tags':str(test.tags), 'source':test.source} for test in test_list], key=itemgetter('name'))
     else:
@@ -271,24 +274,23 @@ class TestRunnerAgent:
             self._run_ID = int(args[1])
         else:
             self._batch_ID = None
-        # print('batch_id', self._batch_ID)
-
         # intializing built in
         self.BuiltIn = BuiltIn()
+        self.logger = RobotLogger(__name__).logger
 
     ROBOT_LISTENER_API_VERSION = 2
     MAX_VARIABLE_VALUE_TEXT_LENGTH = 2048
 
     def start_test(self, name, attrs):
-        print('testStarted', attrs)
-        print("Test Name", name)
-        print(attrs)
+        self.logger.debug('testStarted:', str(attrs))
+        self.logger.info("Test Started Name:%s", name)
         self._send_update(name, Status="'{}'".format(ScriptStatus.RUNNING),
                           Run_Count="Run_Count+1",
                           Start_Time="'{}'".format(self._normalize_date_time(attrs['starttime'])))
 
     def end_test(self, name, attrs):
-        print('Test Ended', attrs)
+        self.logger.debug('Test Ended:', str(attrs))
+        self.logger.info("Test Ended Name:%s", name)
         status = ScriptStatus.PASSED if attrs['status'] == 'PASS' else ScriptStatus.FAIL
         self._send_update(name, Status="'{}'".format(status),
                           End_Time="'{}'".format(self._normalize_date_time(attrs['endtime'])),
@@ -302,9 +304,7 @@ class TestRunnerAgent:
         sql_query = "Update tbl_testruns SET {} WHERE tbl_testruns.Run_ID={}".format(
             ",".join([str(key) + "=" + str(value) for (key, value) in kwargs.items()]),
             self._run_ID)
-
-        print('Sending Updates')
-        print(sql_query)
+        self.logger.debug('Sending Updates Query:%s', sql_query)
         try:
             db_con = m.Robo_Executor_SQLLiteDB()
             db_con.open_connection()

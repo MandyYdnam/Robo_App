@@ -1004,7 +1004,6 @@ class BatchUpdate(tk.Toplevel):
     def get(self):
         data = {}
         for key, widget in self.inputs.items():
-            # print(key)
             data[key] = widget.get()
         return data
 
@@ -1223,7 +1222,6 @@ class ScriptUpdate(tk.Toplevel):
     def get(self):
         data = {}
         for key, widget in self.inputs.items():
-            # print(key)
             data[key] = widget.get()
         return data
 
@@ -1658,7 +1656,6 @@ class Preferences(tk.Toplevel):
     def get(self):
         data = {}
         for key, widget in self.inputs.items():
-            # print(key)
             data[key] = widget.get()
         return data
 

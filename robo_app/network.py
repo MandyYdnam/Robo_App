@@ -52,12 +52,3 @@ class ALM_API():
             domain_mapping[domain] = [domain.attrib['Name'] for domain in response_tree_root.iter('Project') if domain.attrib['Name'] != '']
 
         return domain_mapping
-
-
-
-# rt  = RunTimeData()
-#
-# rt.set_data_item('a', 'Hello')
-# print(rt.get_data_item('a'))
-# st  = RunTimeData.getInstacnce()
-# print(st.get_data_item('a'))

@@ -8,6 +8,7 @@ from sys import platform
 from datetime import datetime
 import csv
 from .util import FileNameNotFoundException
+from .util import RobotLogger
 
 import matplotlib
 # matplotlib.use('TkAgg')
@@ -315,6 +316,7 @@ class FolderTreeView(tk.Frame):
     def __init__(self, parent, path=None, sfilter=None, **kwargs):
         super().__init__(parent, **kwargs)
         self.path = path
+        self.logger = RobotLogger(__name__).logger
         self.entries = None
         self.sfilter = sfilter or []  # Adding the Filter
         # Creating the Tree
@@ -397,7 +399,7 @@ class FolderTreeView(tk.Frame):
 
     def get_selected_item_path(self):
         iid = self.tree.focus()
-        print(self.entries[iid])
+        self.logger.debug(self.entries[iid])
         return self.entries[iid]
 
     def get(self):
@@ -539,7 +541,7 @@ class BatchTabularTreeView(ContextItemMix, TabularTreeView):
         # display the popup menu
         try:
             self.cMenu.selection = self.tree.identify_row(event.y)
-            print("selection", self.cMenu.selection)
+            # print("selection", self.cMenu.selection)
             self.cMenu.post(event.x_root, event.y_root)
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
@@ -558,7 +560,7 @@ class ScriptTabularTreeView(ContextItemMix, TabularTreeView):
         # display the popup menu
         try:
             self.cMenu.selection = self.tree.identify_row(event.y)
-            print("selection", self.cMenu.selection)
+            # print("selection", self.cMenu.selection)
             self.cMenu.post(event.x_root, event.y_root)
         finally:
             # make sure to release the grab (Tk 8.0a1 only)
