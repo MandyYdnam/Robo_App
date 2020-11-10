@@ -1,5 +1,6 @@
 *.pyc
 .idea/
-build/
+build/*
 dist/
 robot_executor.egg-info/
+robotframework_executor.egg-info/

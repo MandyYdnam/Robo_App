@@ -148,9 +148,13 @@ def get_project_tags2(suite_path):
 
 def get_project_tags3_2_2(suite_path):
     """Return Test as Dict"""
-    suite = TestSuiteBuilder().build(suite_path)
-    tag_list = _get_tags_3_2_2(suite)
-    return sorted(list(set(tag_list)))  # removing duplicates
+    tag_list = []
+    try:
+        suite = TestSuiteBuilder().build(suite_path)
+        tag_list = _get_tags_3_2_2(suite)
+    finally:
+        return sorted(list(set(tag_list)))  # removing duplicates
+
 
 
 def get_project_stats(source):
