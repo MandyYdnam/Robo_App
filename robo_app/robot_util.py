@@ -156,7 +156,6 @@ def get_project_tags3_2_2(suite_path):
         return sorted(list(set(tag_list)))  # removing duplicates
 
 
-
 def get_project_stats(source):
     if AppConfig.ROBOT_VERSION < '3.2.2':
         return get_project_stats_3_1_2(source)

@@ -112,7 +112,7 @@ class RobotLogger:
         handlers={
             'h': {'class': 'logging.StreamHandler',
                   'formatter': 'f',
-                  'level': logging.DEBUG}
+                  'level': logging.INFO}
         },
         root={
             'handlers': ['h'],

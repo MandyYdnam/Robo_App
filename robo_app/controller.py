@@ -18,6 +18,7 @@ from numpy import add as num_py_add
 from textwrap import wrap
 import tkinter as tk
 from .util import RobotLogger
+from .constants import BatchStatus
 
 
 class CreateBatchController:
@@ -345,10 +346,10 @@ class BatchMonitorController:
         self.batch_monitor_view = v.BatchMonitor(parent, callbacks, *args, **kwargs)
 
         self.batch_monitor_model = m.BatchMonitorModel()
-        self.batch_execution_monitor_controller = None
+        self.batch_execution_monitor_controller = {}
+        self.execution_threads = {}
         self.load_gui()
 
-        self.execution_threads = {}
 
     def load_gui(self):
         # Load batches in UI
@@ -357,6 +358,13 @@ class BatchMonitorController:
 
     def populate_batch_data(self):
         batches = self.batch_monitor_model.get_batches()
+        batches = [dict(batch) for batch in batches]    #Converting SQL lite Row into Dictonary
+        for batch in batches:
+            if batch['Batch_ID'] in self.execution_threads and self.execution_threads[batch['Batch_ID']].remaining_task()>0 :
+                batch['Status'] = BatchStatus.RUNNING
+            else:
+                batch['Status'] = BatchStatus.NOT_RUNNING
+
         if batches:
             self.batch_monitor_view.populate_batch_information(batches)
         else:
@@ -365,8 +373,19 @@ class BatchMonitorController:
     def callback_open_selected(self):
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()
         self.logger.info('Opening Batch ID:%s', row[0]['Batch_ID'])
-        self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
-                                                                                  batch_id=row[0]['Batch_ID'])
+        batch_id = row[0]['Batch_ID']
+        if batch_id and batch_id not in self.batch_execution_monitor_controller:
+            '''Open the window if not opened yet'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+                                                                                          batch_id=row[0]['Batch_ID'])
+
+        elif not bool(self.batch_execution_monitor_controller[batch_id].batch_exec_monitor_view.winfo_exists()):
+            '''Open the window if closed'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+                                                                                                batch_id=row[0][
+                                                                                                    'Batch_ID'])
+        else:
+            self.batch_execution_monitor_controller[batch_id].lift_gui()
 
     def callback_tree_update(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -378,13 +397,37 @@ class BatchMonitorController:
     def callback_tree_open(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
             self.batch_monitor_view.inputs['trv_batches'].cMenu.selection]
-        self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
+        batch_id = row['Batch_ID']
+        self.logger.info('Opening Batch ID:%s', batch_id)
+        if batch_id and batch_id not in self.batch_execution_monitor_controller:
+            '''Open the window if not opened yet'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
                                                                                   batch_id=row['Batch_ID'])
+
+        elif not bool(self.batch_execution_monitor_controller[batch_id].batch_exec_monitor_view.winfo_exists()):
+            '''Open the window if closed'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+                                                                                                batch_id=row[
+                                                                                                    'Batch_ID'])
+        else:
+            self.batch_execution_monitor_controller[batch_id].lift_gui()
 
     def callback_tree_on_double_click(self):
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()[0]
-        self.batch_execution_monitor_controller = BatchExecutionMonitorController(self.batch_monitor_view,
-                                                                                  batch_id=row['Batch_ID'])
+        batch_id = row['Batch_ID']
+        # self.logger.info('Opening Batch ID:%s', batch_id)
+        self.logger.info('Opening Batch ID')
+        if batch_id and batch_id not in self.batch_execution_monitor_controller:
+            '''Open the window if not opened yet'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+                                                                                   batch_id=row['Batch_ID'])
+        elif not bool(self.batch_execution_monitor_controller[batch_id].batch_exec_monitor_view.winfo_exists()):
+            '''Open the window if closed'''
+            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+                                                                                                batch_id=row[
+                                                                                                    'Batch_ID'])
+        else:
+            self.batch_execution_monitor_controller[batch_id].lift_gui()
 
     def callback_tree_rerun(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -463,6 +506,10 @@ class BatchExecutionMonitorController:
     def load_gui(self):
         self._load_batch_information()
         self._load_scripts_information()
+
+    def lift_gui(self):
+        '''Funtion the show the view on the top if view already exists'''
+        self.batch_exec_monitor_view.lift()
 
     def _load_batch_information(self):
         batch_data = self.batch_exec_monitor_model.get_batch_details(self.batch_id)

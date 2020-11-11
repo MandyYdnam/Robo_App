@@ -1,6 +1,7 @@
 import os
 import logging
 
+
 class FieldTypes:
     string = 1
     string_list = 2
@@ -38,3 +39,9 @@ class DatabaseConfig:
     db_name = ""
 
 
+class BatchStatus:
+    NOT_RUNNING = "Not Running"
+    RUNNING = "Running"
+    PASSED = "Passed"
+    FAIL = "Failed"
+    STOPPED = 'Stopped'
