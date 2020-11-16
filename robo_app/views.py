@@ -322,7 +322,7 @@ class CreateBatchDetailsForm(tk.Frame):
         self.inputs['txb_batchName'].columnconfigure(0, weight=1)
         self.inputs['txb_batchName'].grid(row=0, column=0)
 
-        self.inputs['txb_batchNumberOfThreads'] = w.LabelInput(frame_batch_info, "Number of Threads:",
+        self.inputs['txb_batchNumberOfThreads'] = w.LabelInput(frame_batch_info, "Number of Processes:",
                                                                input_class=w.ValidSpinbox,
                                                                input_var=tk.StringVar(),
                                                                input_arg={"from_": '1', "to": '4', "increment": '1'})
@@ -340,20 +340,28 @@ class CreateBatchDetailsForm(tk.Frame):
                                                             input_var=tk.StringVar()
                                                             , input_arg={"value": "Web",
                                                                          'command': self.cmd_select_application_type})
-        self.inputs['rb_applicationTypeWeb'].grid(row=0, column=1, padx=10)
+        self.inputs['rb_applicationTypeWeb'].grid(row=0, column=2)
 
         self.inputs['rb_applicationTypeMobile'] = w.LabelInput(frame_application_type, "Mobile",
                                                                input_class=ttk.Radiobutton,
                                                                input_var=self.inputs['rb_applicationTypeWeb'].variable,
                                                                input_arg={"value": "Mobile",
                                                                           'command': self.cmd_select_application_type})
-        self.inputs['rb_applicationTypeMobile'].grid(row=0, column=0)
+        self.inputs['rb_applicationTypeMobile'].grid(row=0, column=1)
+
+        self.inputs['rb_applicationTypeOthers'] = w.LabelInput(frame_application_type, "Others",
+                                                               input_class=ttk.Radiobutton,
+                                                               input_var=self.inputs['rb_applicationTypeWeb'].variable,
+                                                               input_arg={"value": "Others",
+                                                                          'command': self.cmd_select_application_type})
+        self.inputs['rb_applicationTypeOthers'].grid(row=0, column=0)
+
 
         self.inputs['rb_application_lang_FR'] = w.LabelInput(frame_application_type, "FR",
                                                              input_class=ttk.Radiobutton,
                                                              input_var=tk.StringVar()
                                                              , input_arg={"value": "FR"})
-        self.inputs['rb_application_lang_FR'].grid(row=1, column=1, padx=10)
+        self.inputs['rb_application_lang_FR'].grid(row=1, column=1)
 
         self.inputs['rb_application_lang_EN'] = w.LabelInput(frame_application_type, "EN",
                                                              input_class=ttk.Radiobutton,
@@ -364,17 +372,17 @@ class CreateBatchDetailsForm(tk.Frame):
         #############################
         # Create a Select Device/Browser Type Frame
         ############################
-        frame_device_browser = tk.LabelFrame(win_batchdetails, text="Select Device / Browser ")
-        frame_device_browser.grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
-        frame_device_browser.columnconfigure(0, weight=1)
-        self.inputs['lstbx_device'] = w.LabelInput(frame_device_browser, "Device List", input_class=tk.Listbox
+        self.inputs['frame_device_browser'] = tk.LabelFrame(win_batchdetails, text="Select Device / Browser ")
+        # self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
+        self.inputs['frame_device_browser'].columnconfigure(0, weight=1)
+        self.inputs['lstbx_device'] = w.LabelInput(self.inputs['frame_device_browser'], "Device List", input_class=tk.Listbox
                                                    , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
                                                                                           'exportselection': 0})
         # self.inputs['lstbx_device'].variable.set(self._load_device_list())
 
         self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
 
-        self.inputs['lstbx_browser'] = w.LabelInput(frame_device_browser, "Internet Explorer", input_class=tk.Listbox
+        self.inputs['lstbx_browser'] = w.LabelInput(self.inputs['frame_device_browser'], "Internet Explorer", input_class=tk.Listbox
                                                     , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
                                                                                            'exportselection': 0})
         self.inputs['lstbx_browser'].variable.set(c.AppConfig.BROWSER_LIST)
@@ -385,7 +393,7 @@ class CreateBatchDetailsForm(tk.Frame):
         self.inputs['frame_mc_details'] = tk.LabelFrame(win_batchdetails, text="Mobile Server Details")
         self.inputs['frame_mc_details'].columnconfigure(0, weight=1)
         self.inputs['frame_mc_details'].columnconfigure(1, weight=1)
-        self.inputs['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
+        # self.inputs['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
 
         self.inputs['lstbx_mobile_center'] = w.LabelInput(self.inputs['frame_mc_details'], "Select Server:"
                                                           , input_class=ttk.Combobox
@@ -463,15 +471,24 @@ class CreateBatchDetailsForm(tk.Frame):
 
     def cmd_select_application_type(self):
         if self.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile':
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_browser'].grid_remove()
             self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
             self.inputs['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['frame_url_details'].grid_remove()
 
-        else:
+        elif self.inputs['rb_applicationTypeWeb'].variable.get() == 'Web':
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['frame_url_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_device'].grid_remove()
             self.inputs['lstbx_browser'].grid(row=0, column=0, padx=10)
+            self.inputs['frame_mc_details'].grid_remove()
+
+        else:
+            self.inputs['frame_device_browser'].grid_remove()
+            self.inputs['frame_url_details'].grid_remove()
+            self.inputs['lstbx_device'].grid_remove()
+            self.inputs['lstbx_browser'].grid_remove()
             self.inputs['frame_mc_details'].grid_remove()
 
     def load_device_list(self, device_list):
@@ -531,8 +548,9 @@ class BatchMonitor(tk.Frame):
         self.inputs['trv_batches'] = w.BatchTabularTreeView(frame_projectinfo,
                                                             ('Batch ID',
                                                              'Name',
+                                                             'Status',
                                                              'Creation Date',
-                                                             '#Threads',
+                                                             '#Processes',
                                                              '#Scripts',
                                                              'Application Type',
                                                              'Device/Browsers'), selection_mode='browse',
@@ -540,7 +558,7 @@ class BatchMonitor(tk.Frame):
 
         self.inputs['trv_batches'].set_column_width('Batch ID', 60)
         self.inputs['trv_batches'].set_column_width('Name', 300)
-        self.inputs['trv_batches'].set_column_width('#Threads', 60)
+        self.inputs['trv_batches'].set_column_width('#Processes', 60)
         self.inputs['trv_batches'].set_column_width('#Scripts', 55)
         self.inputs['trv_batches'].set_column_width('Application Type', 100)
         self.inputs['trv_batches'].set_column_width('Creation Date', 120)
@@ -602,6 +620,7 @@ class BatchMonitor(tk.Frame):
             self.inputs['trv_batches'].insert_item(batch, allow_duplicates=False,
                                                    values=(batch['Batch_ID'],
                                                            batch['Batch_Name'],
+                                                           batch['Status'],
                                                            batch['CreationDate'],
                                                            batch['ThreadCount'],
                                                            batch['ScriptCount'],
@@ -821,7 +840,7 @@ class BatchUpdate(tk.Toplevel):
         self.inputs['txb_batchName'].columnconfigure(0, weight=1)
         self.inputs['txb_batchName'].grid(row=0, column=0)
 
-        self.inputs['txb_batchNumberOfThreads'] = w.LabelInput(frame_batch_info, "Number of Threads:",
+        self.inputs['txb_batchNumberOfThreads'] = w.LabelInput(frame_batch_info, "Number of Processes:",
                                                                input_class=w.ValidSpinbox,
                                                                input_var=tk.StringVar(),
                                                                input_arg={"from_": '1', "to": '4', "increment": '1'})
@@ -838,17 +857,22 @@ class BatchUpdate(tk.Toplevel):
                                                             input_class=ttk.Radiobutton,
                                                             input_var=tk.StringVar()
                                                             , input_arg={"value": "Web",
-                                                                         'command': self.cmd_select_application_type
-                                                                         })
-        self.inputs['rb_applicationTypeWeb'].grid(row=0, column=1, padx=10)
+                                                                         'command': self.cmd_select_application_type})
+        self.inputs['rb_applicationTypeWeb'].grid(row=0, column=2)
 
         self.inputs['rb_applicationTypeMobile'] = w.LabelInput(frame_application_type, "Mobile",
                                                                input_class=ttk.Radiobutton,
                                                                input_var=self.inputs['rb_applicationTypeWeb'].variable,
                                                                input_arg={"value": "Mobile",
-                                                                          'command': self.cmd_select_application_type
-                                                                          })
-        self.inputs['rb_applicationTypeMobile'].grid(row=0, column=0)
+                                                                          'command': self.cmd_select_application_type})
+        self.inputs['rb_applicationTypeMobile'].grid(row=0, column=1)
+
+        self.inputs['rb_applicationTypeOthers'] = w.LabelInput(frame_application_type, "Others",
+                                                               input_class=ttk.Radiobutton,
+                                                               input_var=self.inputs['rb_applicationTypeWeb'].variable,
+                                                               input_arg={"value": "Others",
+                                                                          'command': self.cmd_select_application_type})
+        self.inputs['rb_applicationTypeOthers'].grid(row=0, column=0)
 
         self.inputs['rb_application_lang_FR'] = w.LabelInput(frame_application_type, "FR",
                                                              input_class=ttk.Radiobutton,
@@ -865,16 +889,16 @@ class BatchUpdate(tk.Toplevel):
         #############################
         # Create a Select Device/Browser Type Frame
         ############################
-        frame_device_browser = tk.LabelFrame(self, text="Select Device / Browser ")
-        frame_device_browser.grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
-        frame_device_browser.columnconfigure(0, weight=1)
-        self.inputs['lstbx_device'] = w.LabelInput(frame_device_browser, "Device List", input_class=tk.Listbox
+        self.inputs['frame_device_browser'] = tk.LabelFrame(self, text="Select Device / Browser ")
+        # self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
+        self.inputs['frame_device_browser'].columnconfigure(0, weight=1)
+        self.inputs['lstbx_device'] = w.LabelInput(self.inputs['frame_device_browser'], "Device List", input_class=tk.Listbox
                                                    , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
                                                                                           'exportselection': 0})
 
         self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
 
-        self.inputs['lstbx_browser'] = w.LabelInput(frame_device_browser, "Internet Explorer", input_class=tk.Listbox
+        self.inputs['lstbx_browser'] = w.LabelInput(self.inputs['frame_device_browser'], "Internet Explorer", input_class=tk.Listbox
                                                     , input_var=tk.StringVar(), input_arg={"selectmode": "multiple",
                                                                                            'exportselection': 0})
         self.inputs['lstbx_browser'].variable.set(c.AppConfig.BROWSER_LIST)
@@ -966,14 +990,24 @@ class BatchUpdate(tk.Toplevel):
 
     def cmd_select_application_type(self):
         if self.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile':
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_browser'].grid_remove()
             self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
             self.frames['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.frames['frame_url_details'].grid_remove()
-        else:
+
+        elif self.inputs['rb_applicationTypeWeb'].variable.get() == 'Web':
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_device'].grid_remove()
             self.frames['frame_url_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_browser'].grid(row=0, column=0, padx=10)
+            self.frames['frame_mc_details'].grid_remove()
+
+        else:
+            self.inputs['frame_device_browser'].grid_remove()
+            self.inputs['lstbx_device'].grid_remove()
+            self.frames['frame_url_details'].grid_remove()
+            self.inputs['lstbx_browser'].grid_remove()
             self.frames['frame_mc_details'].grid_remove()
 
     def populate(self, batch_details, device_list):
@@ -982,20 +1016,32 @@ class BatchUpdate(tk.Toplevel):
         self.inputs['rb_applicationTypeWeb'].variable.set(batch_details["TestType"])
         self.inputs['rb_application_lang_FR'].variable.set(batch_details["ENV_LANGUAGE"])
         self.inputs['lstbx_device'].variable.set(device_list)
-        if batch_details["TestType"] != 'Web':
+        if batch_details["TestType"] == 'Mobile':
             self.inputs['lstbx_mobile_center'].variable.set(batch_details["ENV_MC_SERVER"])
             self.inputs['txb_mc_user_name'].variable.set(batch_details["ENV_MC_USER_NAME"])
             self.inputs['txb_mc_user_pass'].variable.set(batch_details["ENV_MC_USER_PASS"])
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.inputs['lstbx_browser'].grid_remove()
             self.inputs['lstbx_device'].grid(row=0, column=0, padx=10)
             self.frames['frame_mc_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.frames['frame_url_details'].grid_remove()
-        else:
+
+        elif batch_details["TestType"] == 'Web':
+            self.inputs['frame_device_browser'].grid(row=4, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.frames['frame_url_details'].grid(row=5, sticky=(tk.W + tk.E), padx=10, pady=10)
             self.frames['frame_mc_details'].grid_remove()
             self.inputs['lstbx_device'].grid_remove()
             self.inputs['lstbx_browser'].grid(row=0, column=0, padx=10)
             self.inputs['lstbx_url_center'].variable.set(batch_details["ENV_URL"])
+
+        else:
+            self.inputs['frame_device_browser'].grid_remove()
+            self.inputs['lstbx_device'].grid_remove()
+            self.frames['frame_url_details'].grid_remove()
+            self.inputs['lstbx_browser'].grid_remove()
+            self.frames['frame_mc_details'].grid_remove()
+
+
         self.inputs['txb_alm_plan_path'].variable.set(batch_details["ALMTestPlanPath"])
         self.inputs['txb_alm_lab_path'].variable.set(batch_details["ALMTestLabPath"])
         self.inputs['txb_alm_test_set_name'].variable.set(batch_details["ALMTestSetName"])

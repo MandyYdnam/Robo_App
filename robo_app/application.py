@@ -5,6 +5,7 @@ from . import views as v
 from .constants import AppConfig
 from . import models as m
 from .util import RunTimeData
+import sys
 
 
 class Application(tk.Tk):
@@ -17,7 +18,10 @@ class Application(tk.Tk):
         self.create_batch = None
         self.stats = None
         # self.resizable(width=False, height=False)
-        self.state('zoomed')
+        if sys.platform == 'linux':
+            self.attributes('-zoomed', True)
+        else:
+            self.state('zoomed')
         # self.geometry("+%d+%d" % (100, 50))
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)

@@ -8,8 +8,10 @@ import getpass
 from .util import RunTimeData
 import datetime
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
+'''Setting aap version'''
+RunTimeData().setdata('app_version', __version__)
 
 RunTimeData().setdata('system_user', getpass.getuser())
 RunTimeData().setdata('login_time', datetime.datetime.now())
@@ -51,3 +53,4 @@ def main():
         multiprocessing.set_start_method("spawn")
     app = application.Application()
     app.mainloop()
+
