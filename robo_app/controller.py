@@ -248,19 +248,27 @@ class CreateBatchDetailsController:
         error_list = self.create_batch_details_view.get_errors()
         view_data = self.create_batch_details_view.get()
         # Removing the Rquired Error If its not Mobile App
-        if self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() != 'Mobile':
+        if view_data['rb_applicationTypeWeb'] == 'Web':
             error_list.pop('txb_mc_user_name', '')
             error_list.pop('txb_mc_user_pass', '')
+        elif view_data['rb_applicationTypeWeb'] == 'Mobile':
+            error_list.pop('lstbx_url_center', '')
         else:
             error_list.pop('lstbx_url_center', '')
+            error_list.pop('txb_mc_user_name', '')
+            error_list.pop('txb_mc_user_pass', '')
 
         if len(error_list) == 0:
             """Controls Batch Creation"""
-            browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace(
-                "\n",
-                ';') if \
-                self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
-                self.create_batch_details_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
+            # browser_device_list = self.create_batch_details_view.inputs['lstbx_device'].get_selected_values().replace(
+            #     "\n",
+            #     ';') if \
+            #     self.create_batch_details_view.inputs['rb_applicationTypeWeb'].variable.get() == 'Mobile' else \
+            #     self.create_batch_details_view.inputs['lstbx_browser'].get_selected_values().replace("\n", ';')
+
+            browser_device_list = view_data['lstbx_device'].replace("\n", ';') if view_data[
+                                                                                      'rb_applicationTypeWeb'] == 'Mobile' else \
+            view_data['lstbx_browser'].replace("\n", ';')
 
             self.batch_data['batch_name'] = view_data['txb_batchName']
             self.batch_data['test_type'] = view_data['rb_applicationTypeWeb']
@@ -272,54 +280,78 @@ class CreateBatchDetailsController:
             if batch_id:
                 browser_device_list = itertools.cycle(browser_device_list.split(";"))
                 test_list = self.batch_data.get('test_list', [])
-
+                '''Inserting Scripts'''
                 self.create_batch_details_model.insert_script(batch_id, browser_device_list, test_list)
-                # Adding ALM and Mobile Center Components
-                alm_test_plan = view_data['txb_alm_plan_path']
-                alm_test_lab = view_data['txb_alm_lab_path']
-                alm_test_set = view_data['txb_alm_test_set_name']
-                test_language = view_data['rb_application_lang_EN']
-                env_url = view_data['lstbx_url_center']
+                '''Inserting Commnad Variables'''
 
-                if view_data['rb_applicationTypeWeb'] == 'Mobile':
-                    mc_server_url = self.create_batch_details_view.inputs['lstbx_mobile_center'].get()
-                    mc_server_user = view_data['txb_mc_user_name']
-                    mc_server_pass = view_data['txb_mc_user_pass']
-                    self.create_batch_details_model.cmd_insert_command_variable(batch_id,
-                                                                                alm_test_plan_path=alm_test_plan,
-                                                                                alm_test_lab_path=alm_test_lab,
-                                                                                alm_test_set_name=alm_test_set,
-                                                                                test_lang=test_language,
-                                                                                mc_server_url=mc_server_url,
-                                                                                mc_server_user_name=mc_server_user,
-                                                                                mc_server_user_pass=mc_server_pass,
-                                                                                alm_url=AppConfig.ALM_URI + "/qcbin",
-                                                                                alm_user=RunTimeData().getdata(
-                                                                                    'alm_user'),
-                                                                                alm_pass=RunTimeData().getdata(
-                                                                                    'alm_password'),
-                                                                                alm_domain=RunTimeData().getdata(
-                                                                                    'alm_domain'),
-                                                                                alm_proj=RunTimeData().getdata(
-                                                                                    'alm_project'))
-                else:
-                    self.create_batch_details_model.cmd_insert_command_variable(batch_id,
-                                                                                alm_test_plan_path=alm_test_plan,
-                                                                                alm_test_lab_path=alm_test_lab,
-                                                                                alm_test_set_name=alm_test_set,
-                                                                                test_lang=test_language,
-                                                                                alm_url=AppConfig.ALM_URI + "/qcbin",
-                                                                                alm_user=RunTimeData().getdata(
-                                                                                    'alm_user'),
-                                                                                alm_pass=RunTimeData().getdata(
-                                                                                    'alm_password'),
-                                                                                alm_domain=RunTimeData().getdata(
-                                                                                    'alm_domain'),
-                                                                                alm_proj=RunTimeData().getdata(
-                                                                                    'alm_project'),
-                                                                                env_url=env_url)
+                self.create_batch_details_model.cmd_insert_command_variable(batch_id,
+                                                                            alm_test_plan_path=view_data.get('txb_alm_plan_path', ''),
+                                                                            alm_test_lab_path=view_data.get('txb_alm_lab_path',''),
+                                                                            alm_test_set_name=view_data.get('txb_alm_test_set_name', ''),
+                                                                            test_lang=view_data.get('rb_application_lang_EN', ''),
+                                                                            mc_server_url=view_data.get('lstbx_mobile_center', ''),
+                                                                            mc_server_user_name=view_data.get('txb_mc_user_name', ''),
+                                                                            mc_server_user_pass=view_data.get('txb_mc_user_pass',''),
+                                                                            env_url=view_data.get('lstbx_url_center', ''),
+                                                                            alm_url=AppConfig.ALM_URI + "/qcbin",
+                                                                            alm_user=RunTimeData().getdata(
+                                                                                'alm_user'),
+                                                                            alm_pass=RunTimeData().getdata(
+                                                                                'alm_password'),
+                                                                            alm_domain=RunTimeData().getdata(
+                                                                                'alm_domain'),
+                                                                            alm_proj=RunTimeData().getdata(
+                                                                                'alm_project'))
+
                 messagebox.showinfo('Batch Create', "Batch has been created with Batch ID:{}".format(batch_id),
                                     parent=self.create_batch_details_view)
+
+                # # Adding ALM and Mobile Center Components
+                # alm_test_plan = view_data['txb_alm_plan_path']
+                # alm_test_lab = view_data['txb_alm_lab_path']
+                # alm_test_set = view_data['txb_alm_test_set_name']
+                # test_language = view_data['rb_application_lang_EN']
+                # env_url = view_data['lstbx_url_center']
+                #
+                # if view_data['rb_applicationTypeWeb'] == 'Mobile':
+                #     mc_server_url = self.create_batch_details_view.inputs['lstbx_mobile_center'].get()
+                #     mc_server_user = view_data['txb_mc_user_name']
+                #     mc_server_pass = view_data['txb_mc_user_pass']
+                #     self.create_batch_details_model.cmd_insert_command_variable(batch_id,
+                #                                                                 alm_test_plan_path=alm_test_plan,
+                #                                                                 alm_test_lab_path=alm_test_lab,
+                #                                                                 alm_test_set_name=alm_test_set,
+                #                                                                 test_lang=test_language,
+                #                                                                 mc_server_url=mc_server_url,
+                #                                                                 mc_server_user_name=mc_server_user,
+                #                                                                 mc_server_user_pass=mc_server_pass,
+                #                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
+                #                                                                 alm_user=RunTimeData().getdata(
+                #                                                                     'alm_user'),
+                #                                                                 alm_pass=RunTimeData().getdata(
+                #                                                                     'alm_password'),
+                #                                                                 alm_domain=RunTimeData().getdata(
+                #                                                                     'alm_domain'),
+                #                                                                 alm_proj=RunTimeData().getdata(
+                #                                                                     'alm_project'))
+                # else:
+                #     self.create_batch_details_model.cmd_insert_command_variable(batch_id,
+                #                                                                 alm_test_plan_path=alm_test_plan,
+                #                                                                 alm_test_lab_path=alm_test_lab,
+                #                                                                 alm_test_set_name=alm_test_set,
+                #                                                                 test_lang=test_language,
+                #                                                                 alm_url=AppConfig.ALM_URI + "/qcbin",
+                #                                                                 alm_user=RunTimeData().getdata(
+                #                                                                     'alm_user'),
+                #                                                                 alm_pass=RunTimeData().getdata(
+                #                                                                     'alm_password'),
+                #                                                                 alm_domain=RunTimeData().getdata(
+                #                                                                     'alm_domain'),
+                #                                                                 alm_proj=RunTimeData().getdata(
+                #                                                                     'alm_project'),
+                #                                                                 env_url=env_url)
+                # messagebox.showinfo('Batch Create', "Batch has been created with Batch ID:{}".format(batch_id),
+                #                     parent=self.create_batch_details_view)
             else:
                 messagebox.showerror('Error', 'Unable to Create Batch')
             self.create_batch_details_view.unload_gui()
@@ -372,20 +404,23 @@ class BatchMonitorController:
 
     def callback_open_selected(self):
         row = self.batch_monitor_view.inputs['trv_batches'].get_selected_items()
-        self.logger.info('Opening Batch ID:%s', row[0]['Batch_ID'])
-        batch_id = row[0]['Batch_ID']
-        if batch_id and batch_id not in self.batch_execution_monitor_controller:
+        if not row:
+            messagebox.showwarning("Batch Monitor", "Please Select a batch.")
+            return
+
+        if row[0]['Batch_ID'] not in self.batch_execution_monitor_controller:
+            self.logger.info('Opening Batch ID:%s', row[0]['Batch_ID'])
             '''Open the window if not opened yet'''
-            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+            self.batch_execution_monitor_controller[row[0]['Batch_ID']] = BatchExecutionMonitorController(self.batch_monitor_view,
                                                                                           batch_id=row[0]['Batch_ID'])
 
-        elif not bool(self.batch_execution_monitor_controller[batch_id].batch_exec_monitor_view.winfo_exists()):
+        elif not bool(self.batch_execution_monitor_controller[row[0]['Batch_ID']].batch_exec_monitor_view.winfo_exists()):
             '''Open the window if closed'''
-            self.batch_execution_monitor_controller[batch_id] = BatchExecutionMonitorController(self.batch_monitor_view,
+            self.batch_execution_monitor_controller[row[0]['Batch_ID']] = BatchExecutionMonitorController(self.batch_monitor_view,
                                                                                                 batch_id=row[0][
                                                                                                     'Batch_ID'])
         else:
-            self.batch_execution_monitor_controller[batch_id].lift_gui()
+            self.batch_execution_monitor_controller[row[0]['Batch_ID']].lift_gui()
 
     def callback_tree_update(self):
         row = self.batch_monitor_view.inputs['trv_batches'].entries[
@@ -639,7 +674,7 @@ class BatchUpdateController:
                                                                              device_browser_list.split(';'))
                 self.batch_update_view.destroy()
                 if bol_batch_update and bol_var_update and bol_script_update:
-                    messagebox.showinfo("Sucess!!", "Batch has been updated")
+                    messagebox.showinfo("Success!!", "Batch has been updated")
         except Exception as e:
             messagebox.showerror("Unable to Update", "Please contact Dev's.")
 

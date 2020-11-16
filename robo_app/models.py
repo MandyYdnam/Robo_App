@@ -914,7 +914,6 @@ class SettingsModel:
         self.logger = RobotLogger(__name__).logger
         self.load()
 
-
     def load(self):
         """if file does not exist then retrun"""
         if not os.path.exists(self.filepath):

@@ -150,6 +150,8 @@ History
 
     * - Version
       - Features/enhancements
+    * - `0.1.4`_
+      - Bug Fixes and Ubuntu Compatibility.
     * - 0.1.3
       - RF 3.2.2 Compatibility
     * - 0.1.1 - 0.1.2
@@ -178,6 +180,7 @@ History
 .. _matplotlib: https://matplotlib.org/
 .. _0.1.0: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_1.0.rst
 .. _0.0.9: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_0.09.rst
+.. _0.1.4: https://github.com/MandyYdnam/Robo_App/milestone/2?closed=1
 
 .. |How To Create a Batch| image:: https://media.giphy.com/media/XzovyaAGfI95husPa9/giphy.gif
   :width: 400
