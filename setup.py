@@ -10,7 +10,7 @@ setup(
     name="robotframework-executor",
     version=robo_app.__version__,
     author="Mandeep Dhiman",
-    author_email="mandeepsinghdhiman@outlook.com",
+    author_email=robo_app.__authormail__,
     description="A GUI based Robot Test Executor",
     long_description=long_description,
     # long_description_content_type="text/markdown",
