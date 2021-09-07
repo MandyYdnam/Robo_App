@@ -22,7 +22,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
-    install_requires=['requests>=2.22', 'robotframework>=4.1', 'matplotlib>=3.2.1'],
+    install_requires=['requests>=2.22.0', 'robotframework>=4.1', 'matplotlib>=3.2.1'],
     entry_points={'console_scripts':['roboapp = robo_app:main']
     }
 )

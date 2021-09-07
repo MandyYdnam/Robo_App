@@ -138,7 +138,9 @@ Robot Framework Version Support
     * - v 0.1.2
       - v <= 3.1.2
     * - v 0.1.3
-      - v 3.2.2
+      - v 3.2.2 > 4.0
+    * - v 0.1.5
+      - v 4.1
 
 
 
