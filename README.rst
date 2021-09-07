@@ -5,7 +5,7 @@ Description
 * Search Test using Robot Tags
 * Run/Track the batch execution status in real time.
 * Bookmarks your frequently used test sets to create batch easily.
-* Run Robot Batch in multiple threads to seed up the execution.
+* Run Robot Batch in parallel to seed up the execution.
 * Designed to suite Mobile and Web test Automation in mind.
 * This application is written in Python_ 3.7. Not tested for Python 3.8
 * Can be integrated with Microfocus ALM Authentication.
@@ -150,6 +150,9 @@ History
 
     * - Version
       - Features/enhancements
+    * - `0.1.5`_
+      - | Support for Robot Framework 4.1. (If cannot use RF4.1, then use version 0.1.4 for this software.)
+        | Bug fixes for Test execution and Test Creation Stats
     * - `0.1.4`_
       - Bug Fixes and Ubuntu Compatibility.
     * - 0.1.3
@@ -180,7 +183,8 @@ History
 .. _matplotlib: https://matplotlib.org/
 .. _0.1.0: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_1.0.rst
 .. _0.0.9: https://github.com/MandyYdnam/Robo_App/blob/master/doc/Robo_app_0.09.rst
-.. _0.1.4: https://github.com/MandyYdnam/Robo_App/milestone/2?closed=1
+.. _0.1.4: https://github.com/MandyYdnam/Robo_App/milestone/2
+.. _0.1.5: https://github.com/MandyYdnam/Robo_App/milestone/3
 
 .. |How To Create a Batch| image:: https://media.giphy.com/media/XzovyaAGfI95husPa9/giphy.gif
   :width: 400

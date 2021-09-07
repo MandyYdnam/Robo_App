@@ -259,6 +259,7 @@ class ScriptStatus():
     PASSED = "Passed"
     FAIL = "Failed"
     STOPPED = 'Stopped'
+    SKIPPED = 'SKIP'
 
 
 class TestRunnerAgent:
@@ -294,7 +295,14 @@ class TestRunnerAgent:
     def end_test(self, name, attrs):
         self.logger.debug('Test Ended:', str(attrs))
         self.logger.info("Test Ended Name:%s", name)
-        status = ScriptStatus.PASSED if attrs['status'] == 'PASS' else ScriptStatus.FAIL
+        # status = ScriptStatus.PASSED if attrs['status'] == 'PASS' else ScriptStatus.FAIL
+        if attrs['status'] == 'PASS':
+            status = ScriptStatus.PASSED
+        elif attrs['status'] == 'SKIP':
+            status = ScriptStatus.SKIPPED
+        else:
+            status = ScriptStatus.FAIL
+
         self._send_update(name, Status="'{}'".format(status),
                           End_Time="'{}'".format(self._normalize_date_time(attrs['endtime'])),
                           Log_path="'{}'".format(self.BuiltIn.get_variables()['${LOG_FILE}']))

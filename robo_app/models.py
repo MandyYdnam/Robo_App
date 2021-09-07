@@ -884,7 +884,7 @@ WHERE
 tbl_testruns.Script_ID=tbl_scripts.Script_ID 
 AND
 tbl_testruns.Start_Time BETWEEN ? AND ?"""
-            return self.query(sql_query, (to_date, from_date))
+            return self.query(sql_query, (from_date, to_date))
         except Exception as e:
             self.logger.error(e)
             raise e
@@ -893,7 +893,7 @@ tbl_testruns.Start_Time BETWEEN ? AND ?"""
         """Get test execution data"""
         try:
             sql_query = """SELECT * FROM tbl_scripts WHERE tbl_scripts.CreationDate BETWEEN ? AND ?"""
-            return self.query(sql_query, (to_date, from_date))
+            return self.query(sql_query, (from_date, to_date))
         except Exception as e:
             self.logger.error(e)
             raise e

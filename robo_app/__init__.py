@@ -8,7 +8,7 @@ import getpass
 from .util import RunTimeData
 import datetime
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 '''Setting aap version'''
 RunTimeData().setdata('app_version', __version__)
