@@ -8,6 +8,7 @@ from tkinter import simpledialog
 from tkinter import messagebox
 from .util import FileNameNotFoundException
 from datetime import datetime
+import robo_app
 
 
 class CreateBatchForm(tk.Frame):
@@ -1625,7 +1626,9 @@ class MainMenu(tk.Menu):
         """show about dialog"""
         about_message = 'Robot Executor'
         about_details = ('By Mandeep Dhiman\n'
-                         'For assistance please contact the author.')
+                         'For assistance please contact the author\n'
+                         'Email: {}\n'
+                         'Version :{}'.format(robo_app.__authormail__,robo_app.__version__))
         messagebox.showinfo(title='About', message=about_message, detail=about_details)
 
 

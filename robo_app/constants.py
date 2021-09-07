@@ -45,3 +45,4 @@ class BatchStatus:
     PASSED = "Passed"
     FAIL = "Failed"
     STOPPED = 'Stopped'
+    SKIPPED = 'SKIP'

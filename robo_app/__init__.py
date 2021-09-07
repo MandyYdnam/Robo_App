@@ -8,7 +8,8 @@ import getpass
 from .util import RunTimeData
 import datetime
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
+__authormail__ = "mandeepsinghdhiman@outlook.com"
 
 '''Setting aap version'''
 RunTimeData().setdata('app_version', __version__)
